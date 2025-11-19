@@ -32,13 +32,21 @@ public class ActaController {
     }
 
     @PostMapping(path = "upload")
-    public ResponseEntity<ActaSincronizacionResponseDTO> upload(@AuthenticationPrincipal UserDTO usuario,
-                                                                @Validated @RequestBody ActaCompleteDTO actaCompleteDTO) {
-        log.info("ActaController.upload {}", usuario);
+    public ResponseEntity<ActaSincronizacionResponseDTO> upload(
+            @AuthenticationPrincipal UserDTO usuario,
+            @Validated @RequestBody ActaCompleteDTO actaCompleteDTO) {
+        log.info("ActaController.upload - Usuario: {}, NumActa: {}",
+                usuario != null ? usuario.getUsername() : "null",
+                actaCompleteDTO != null ? actaCompleteDTO.getNumActa() : "null");
+
         if (usuario == null) {
             throw new BadCredentialsException("Error en el token");
         }
-        ObtenerActaResponseDTO response = this.actaService.obtenerActas(usuario.getPerCodigo());
+
+        ActaSincronizacionResponseDTO response = this.actaService.procesarActaSubida(
+                actaCompleteDTO,
+                usuario.getPerCodigo());
+
         return ResponseEntity.ok().body(response);
     }
 

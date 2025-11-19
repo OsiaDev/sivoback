@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Optional;
 
 public interface AutoComisorioRepository extends JpaRepository<SiiAutoComisorioEntity, Long> {
 
@@ -27,5 +28,8 @@ public interface AutoComisorioRepository extends JpaRepository<SiiAutoComisorioE
             @Param("estado") String estado,
             @Param("fechaMesAtras") LocalDate fechaMesAtras,
             @Param("fechaActual") LocalDate fechaActual);
+
+    @Query("SELECT ac FROM SiiAutoComisorioEntity ac WHERE ac.aucNumero = :aucNumero")
+    Optional<SiiAutoComisorioEntity> findByAucNumero(@Param("aucNumero") Integer aucNumero);
 
 }

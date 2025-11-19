@@ -7,13 +7,13 @@ spring:
     name: Sivo
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/umas_db
-    username: umas_user
-    password: umas_pass
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:oracle:thin:@//172.16.1.203:1521/siicol19_pruebas_pdb.sub12111935041.vcnpruebas.oraclevcn.com
+    username: pr
+    password: PR-s1C0l-T3st
+    driver-class-name: oracle.jdbc.OracleDriver
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
       ddl-auto: none
     show-sql: true
@@ -26,4 +26,4 @@ jwt:
   expirationMs: 43200
 
 aes:
-  secretKey: ${AES_KEY}
+  secretKey: QwErTyUiOpAsDfGh
