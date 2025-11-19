@@ -1,0 +1,29 @@
+server:
+  servlet:
+    context-path: /sivo
+
+spring:
+  application:
+    name: Sivo
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/umas_db
+    username: umas_user
+    password: umas_pass
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: e3pLV3tPUUg3KiI1OFYkYj04Sn1pQl5IeTgteWdXRyhfeWU1TmU2UmNMZSM0YFM/VEtNey84TD9NPUs0dFpF
+  expirationMs: 43200
+
+aes:
+  secretKey: ${AES_KEY}
