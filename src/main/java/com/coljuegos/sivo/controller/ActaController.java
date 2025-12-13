@@ -5,6 +5,7 @@ import com.coljuegos.sivo.data.dto.UserDTO;
 import com.coljuegos.sivo.data.dto.acta.ActaCompleteDTO;
 import com.coljuegos.sivo.data.dto.acta.ActaSincronizacionResponseDTO;
 import com.coljuegos.sivo.service.acta.ActaService;
+import com.coljuegos.sivo.service.acta.UploadActaService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 public class ActaController {
 
     private final ActaService actaService;
+
+    private final UploadActaService uploadActaService;
 
     @GetMapping(path = "obtenerActas")
     public ResponseEntity<ObtenerActaResponseDTO> obtenerActas(@AuthenticationPrincipal UserDTO usuario) {
@@ -43,7 +46,7 @@ public class ActaController {
             throw new BadCredentialsException("Error en el token");
         }
 
-        ActaSincronizacionResponseDTO response = this.actaService.procesarActaSubida(
+        ActaSincronizacionResponseDTO response = this.uploadActaService.procesarActaSubida(
                 actaCompleteDTO,
                 usuario.getPerCodigo());
 
