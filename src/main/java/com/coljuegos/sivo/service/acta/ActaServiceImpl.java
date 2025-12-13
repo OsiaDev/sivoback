@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -54,7 +53,7 @@ public class ActaServiceImpl implements ActaService {
         try {
             log.info("Procesando subida de acta número: {}", actaCompleteDTO.getNumActa());
 
-            if (actaCompleteDTO == null || actaCompleteDTO.getNumActa() == null) {
+            if (actaCompleteDTO.getNumActa() == null) {
                 log.warn("Datos de acta inválidos o número de acta nulo");
                 return ActaSincronizacionResponseDTO.error("Datos de acta inválidos");
             }
@@ -115,13 +114,9 @@ public class ActaServiceImpl implements ActaService {
         }
 
         // Verificar fiscalizador acompañante
-        if (grupo.getFsuCodigoAcomp() != null &&
+        return grupo.getFsuCodigoAcomp() != null &&
                 grupo.getFsuCodigoAcomp().getSiiPersona() != null &&
-                perCodigo.equals(grupo.getFsuCodigoAcomp().getSiiPersona().getPerCodigo())) {
-            return true;
-        }
-
-        return false;
+                perCodigo.equals(grupo.getFsuCodigoAcomp().getSiiPersona().getPerCodigo());
     }
 
     public Collection<SiiAutoComisorioEntity> autoComisFiscaPrinciVisita(Long perCodigo) throws CustomException {

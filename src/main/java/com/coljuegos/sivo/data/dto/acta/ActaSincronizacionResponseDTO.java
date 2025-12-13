@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ActaSincronizacionResponseDTO {
+
     private Boolean success;
     private String message;
     private Integer numActa;
@@ -19,4 +20,5 @@ public class ActaSincronizacionResponseDTO {
     public static ActaSincronizacionResponseDTO error(String message) {
         return new ActaSincronizacionResponseDTO(false, message, null);
     }
+
 }
