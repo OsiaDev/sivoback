@@ -1,16 +1,22 @@
 package com.coljuegos.sivo.service.acta;
 
-import com.coljuegos.sivo.data.dto.acta.ActaCompleteDTO;
-import com.coljuegos.sivo.data.dto.acta.ActaSincronizacionResponseDTO;
+import com.coljuegos.sivo.data.dto.acta.*;
 import com.coljuegos.sivo.data.entity.EstadoVisita;
 import com.coljuegos.sivo.data.entity.SiiAutoComisorioEntity;
 import com.coljuegos.sivo.data.entity.SiiGrupoFiscalizacionEntity;
+import com.coljuegos.sivo.data.entity.visita.SiiActaVisitaEntity;
+import com.coljuegos.sivo.data.entity.visita.SiiVerificacionContractualEntity;
+import com.coljuegos.sivo.data.entity.visita.SiiVerificacionSiplaftEntity;
+import com.coljuegos.sivo.data.repository.ActaVisitaRepository;
 import com.coljuegos.sivo.data.repository.AutoComisorioRepository;
+import com.coljuegos.sivo.data.repository.VerificacionContractualRepository;
+import com.coljuegos.sivo.data.repository.VerificacionSiplaftRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Slf4j
@@ -19,6 +25,12 @@ import java.util.Optional;
 public class UploadActaServiceImpl implements UploadActaService {
 
     private final AutoComisorioRepository autoComisorioRepository;
+
+    private final ActaVisitaRepository actaVisitaRepository;
+
+    private final VerificacionContractualRepository verificacionContractualRepository;
+
+    private final VerificacionSiplaftRepository verificacionSiplaftRepository;
 
     @Override
     @Transactional
@@ -31,7 +43,7 @@ public class UploadActaServiceImpl implements UploadActaService {
                 return ActaSincronizacionResponseDTO.error("Datos de acta inválidos");
             }
 
-            // Buscar el auto comisorio por número de acta
+            // Buscar el auto comisorio por número de actas
             Optional<SiiAutoComisorioEntity> autoOpt = this.autoComisorioRepository
                     .findByAucNumero(actaCompleteDTO.getNumActa());
 
@@ -49,6 +61,27 @@ public class UploadActaServiceImpl implements UploadActaService {
                         perCodigo, actaCompleteDTO.getNumActa());
                 return ActaSincronizacionResponseDTO.error(
                         "No tiene permisos para modificar esta acta");
+            }
+
+            // Guardar la información de ActaVisitaDTO
+            if (actaCompleteDTO.getActaVisita() != null) {
+                this.guardarActaVisita(actaCompleteDTO.getActaVisita(), autoComisorio, actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar la información de VerificacionContractualDTO
+            if (actaCompleteDTO.getVerificacionContractual() != null) {
+                this.guardarVerificacionContractual(
+                        actaCompleteDTO.getVerificacionContractual(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar la información de VerificacionSiplaftDTO
+            if (actaCompleteDTO.getVerificacionSiplaft() != null) {
+                this.guardarVerificacionSiplaft(
+                        actaCompleteDTO.getVerificacionSiplaft(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
             }
 
             // Cambiar el estado de visita a VISITADO
@@ -90,6 +123,141 @@ public class UploadActaServiceImpl implements UploadActaService {
         return grupo.getFsuCodigoAcomp() != null &&
                 grupo.getFsuCodigoAcomp().getSiiPersona() != null &&
                 perCodigo.equals(grupo.getFsuCodigoAcomp().getSiiPersona().getPerCodigo());
+    }
+
+    private void guardarActaVisita(ActaVisitaDTO actaVisitaDTO, SiiAutoComisorioEntity autoComisorio, Integer numActa) {
+        try {
+            log.info("Guardando información de ActaVisita para acta número: {}", numActa);
+
+            // Verificar si ya existe un registro para este auto comisorio
+            Optional<SiiActaVisitaEntity> actaExistente = this.actaVisitaRepository
+                    .findByAutoComisorioCodigo(autoComisorio.getAucCodigo());
+
+            SiiActaVisitaEntity actaVisitaEntity;
+
+            if (actaExistente.isPresent()) {
+                // Actualizar registro existente
+                log.info("Actualizando registro existente de ActaVisita para acta: {}", numActa);
+                actaVisitaEntity = actaExistente.get();
+            } else {
+                // Crear nuevo registro
+                log.info("Creando nuevo registro de ActaVisita para acta: {}", numActa);
+                actaVisitaEntity = new SiiActaVisitaEntity();
+                actaVisitaEntity.setSiiAutoComisorio(autoComisorio);
+                actaVisitaEntity.setAviNumActa(numActa);
+                actaVisitaEntity.setAviFechaRegistro(LocalDateTime.now());
+            }
+
+            // Mapear datos del DTO a la entidad
+            actaVisitaEntity.setAviNombrePresente(actaVisitaDTO.getNombrePresente());
+            actaVisitaEntity.setAviIdentificacionPresente(actaVisitaDTO.getIdentificacionPresente());
+            actaVisitaEntity.setAviMunicipio(actaVisitaDTO.getMunicipio());
+            actaVisitaEntity.setAviCargoPresente(actaVisitaDTO.getCargoPresente());
+            actaVisitaEntity.setAviEmailPresente(actaVisitaDTO.getEmailPresente());
+            actaVisitaEntity.setAviCorreosContacto(actaVisitaDTO.getCorreosContacto());
+
+            // Guardar en la base de datos
+            this.actaVisitaRepository.save(actaVisitaEntity);
+
+            log.info("ActaVisita guardada exitosamente para acta: {}, código: {}",
+                    numActa, actaVisitaEntity.getAviCodigo());
+
+        } catch (Exception e) {
+            log.error("Error al guardar ActaVisita para acta {}: {}", numActa, e.getMessage(), e);
+            throw new RuntimeException("Error al guardar información de visita: " + e.getMessage(), e);
+        }
+    }
+
+    private void guardarVerificacionContractual(VerificacionContractualDTO verificacionDTO,
+                                                SiiAutoComisorioEntity autoComisorio,
+                                                Integer numActa) {
+        try {
+            log.info("Guardando información de VerificacionContractual para acta número: {}", numActa);
+
+            // Verificar si ya existe un registro para este auto comisorio
+            Optional<SiiVerificacionContractualEntity> verificacionExistente =
+                    this.verificacionContractualRepository.findByAutoComisorioCodigo(autoComisorio.getAucCodigo());
+
+            SiiVerificacionContractualEntity verificacionEntity;
+
+            if (verificacionExistente.isPresent()) {
+                // Actualizar registro existente
+                log.info("Actualizando registro existente de VerificacionContractual para acta: {}", numActa);
+                verificacionEntity = verificacionExistente.get();
+            } else {
+                // Crear nuevo registro
+                log.info("Creando nuevo registro de VerificacionContractual para acta: {}", numActa);
+                verificacionEntity = new SiiVerificacionContractualEntity();
+                verificacionEntity.setSiiAutoComisorio(autoComisorio);
+                verificacionEntity.setVcoNumActa(numActa);
+                verificacionEntity.setVcoFechaRegistro(LocalDateTime.now());
+            }
+
+            // Mapear datos del DTO a la entidad
+            verificacionEntity.setVcoAvisoAutorizacion(verificacionDTO.getAvisoAutorizacion());
+            verificacionEntity.setVcoDireccionCorresponde(verificacionDTO.getDireccionCorresponde());
+            verificacionEntity.setVcoOtraDireccion(verificacionDTO.getOtraDireccion());
+            verificacionEntity.setVcoNombreEstCorresponde(verificacionDTO.getNombreEstablecimientoCorresponde());
+            verificacionEntity.setVcoOtroNombre(verificacionDTO.getOtroNombre());
+            verificacionEntity.setVcoActividadesDiferentes(verificacionDTO.getDesarrollaActividadesDiferentes());
+            verificacionEntity.setVcoTipoActividad(verificacionDTO.getTipoActividad());
+            verificacionEntity.setVcoEspecificacionOtros(verificacionDTO.getEspecificacionOtros());
+            verificacionEntity.setVcoRegistrosMantenimiento(verificacionDTO.getCuentaRegistrosMantenimiento());
+
+            // Guardar en la base de datos
+            this.verificacionContractualRepository.save(verificacionEntity);
+
+            log.info("VerificacionContractual guardada exitosamente para acta: {}, código: {}",
+                    numActa, verificacionEntity.getVcoCodigo());
+
+        } catch (Exception e) {
+            log.error("Error al guardar VerificacionContractual para acta {}: {}", numActa, e.getMessage(), e);
+            throw new RuntimeException("Error al guardar verificación contractual: " + e.getMessage(), e);
+        }
+    }
+
+    private void guardarVerificacionSiplaft(VerificacionSiplaftDTO verificacionDTO,
+                                            SiiAutoComisorioEntity autoComisorio,
+                                            Integer numActa) {
+        try {
+            log.info("Guardando información de VerificacionSiplaft para acta número: {}", numActa);
+
+            // Verificar si ya existe un registro para este auto comisorio
+            Optional<SiiVerificacionSiplaftEntity> verificacionExistente =
+                    this.verificacionSiplaftRepository.findByAutoComisorioCodigo(autoComisorio.getAucCodigo());
+
+            SiiVerificacionSiplaftEntity verificacionEntity;
+
+            if (verificacionExistente.isPresent()) {
+                // Actualizar registro existente
+                log.info("Actualizando registro existente de VerificacionSiplaft para acta: {}", numActa);
+                verificacionEntity = verificacionExistente.get();
+            } else {
+                // Crear nuevo registro
+                log.info("Creando nuevo registro de VerificacionSiplaft para acta: {}", numActa);
+                verificacionEntity = new SiiVerificacionSiplaftEntity();
+                verificacionEntity.setSiiAutoComisorio(autoComisorio);
+                verificacionEntity.setVsiNumActa(numActa);
+                verificacionEntity.setVsiFechaRegistro(LocalDateTime.now());
+            }
+
+            // Mapear datos del DTO a la entidad
+            verificacionEntity.setVsiFormatoIdentificacion(verificacionDTO.getCuentaFormatoIdentificacion());
+            verificacionEntity.setVsiMontoIdentificacion(verificacionDTO.getMontoIdentificacion());
+            verificacionEntity.setVsiFormatoReporteInterno(verificacionDTO.getCuentaFormatoReporteInterno());
+            verificacionEntity.setVsiSenalesAlerta(verificacionDTO.getSenalesAlerta());
+            verificacionEntity.setVsiConoceCodigoConducta(verificacionDTO.getConoceCodigoConducta());
+
+            // Guardar en la base de datos
+            this.verificacionSiplaftRepository.save(verificacionEntity);
+
+            log.info("VerificacionSiplaft guardada exitosamente para acta: {}, código: {}",
+                    numActa, verificacionEntity.getVsiCodigo());
+
+        } catch (Exception e) {
+            log.error("Error al guardar VerificacionSiplaft para acta {}: {}", numActa, e.getMessage(), e);
+            throw new RuntimeException("Error al guardar verificación SIPLAFT: " + e.getMessage(), e);
+        }
     }
 
 }
