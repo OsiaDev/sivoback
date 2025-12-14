@@ -11,13 +11,16 @@ import com.coljuegos.sivo.data.repository.ActaVisitaRepository;
 import com.coljuegos.sivo.data.repository.AutoComisorioRepository;
 import com.coljuegos.sivo.data.repository.VerificacionContractualRepository;
 import com.coljuegos.sivo.data.repository.VerificacionSiplaftRepository;
+import com.coljuegos.sivo.service.imagen.ImagenProcessingService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.zip.DataFormatException;
 
 @Slf4j
 @Service
@@ -31,6 +34,8 @@ public class UploadActaServiceImpl implements UploadActaService {
     private final VerificacionContractualRepository verificacionContractualRepository;
 
     private final VerificacionSiplaftRepository verificacionSiplaftRepository;
+
+    private final ImagenProcessingService imagenProcessingService;
 
     @Override
     @Transactional
@@ -257,6 +262,59 @@ public class UploadActaServiceImpl implements UploadActaService {
         } catch (Exception e) {
             log.error("Error al guardar VerificacionSiplaft para acta {}: {}", numActa, e.getMessage(), e);
             throw new RuntimeException("Error al guardar verificación SIPLAFT: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Procesa y descomprime una imagen del acta
+     *
+     * @param imagenDTO Datos de la imagen comprimida
+     * @return Array de bytes de la imagen descomprimida, o null si hay error
+     */
+    private byte[] procesarImagen(ImagenDTO imagenDTO) {
+        if (imagenDTO == null) {
+            log.warn("ImagenDTO es null - omitiendo");
+            return null;
+        }
+
+        if (imagenDTO.getImagenBase64() == null || imagenDTO.getImagenBase64().trim().isEmpty()) {
+            log.warn("Imagen '{}' no tiene datos base64 - omitiendo",
+                    imagenDTO.getNombreImagen());
+            return null;
+        }
+
+        try {
+            log.debug("Descomprimiendo imagen: nombre='{}', descripcion='{}', fragmento='{}'",
+                    imagenDTO.getNombreImagen(),
+                    imagenDTO.getDescripcion(),
+                    imagenDTO.getFragmentOrigen());
+
+            byte[] imagenDescomprimida = this.imagenProcessingService.descomprimirImagen(
+                    imagenDTO.getImagenBase64());
+
+            log.info("Imagen '{}' descomprimida exitosamente. Tamaño: {} bytes",
+                    imagenDTO.getNombreImagen(),
+                    imagenDescomprimida.length);
+
+            return imagenDescomprimida;
+
+        } catch (DataFormatException e) {
+            log.error("Formato de compresión inválido para imagen '{}': {}",
+                    imagenDTO.getNombreImagen(),
+                    e.getMessage());
+            return null;
+
+        } catch (IOException e) {
+            log.error("Error de I/O al descomprimir imagen '{}': {}",
+                    imagenDTO.getNombreImagen(),
+                    e.getMessage());
+            return null;
+
+        } catch (Exception e) {
+            log.error("Error inesperado al procesar imagen '{}': {}",
+                    imagenDTO.getNombreImagen(),
+                    e.getMessage(), e);
+            return null;
         }
     }
 
