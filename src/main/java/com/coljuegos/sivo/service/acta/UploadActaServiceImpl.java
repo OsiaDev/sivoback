@@ -5,13 +5,14 @@ import com.coljuegos.sivo.data.entity.EstadoVisita;
 import com.coljuegos.sivo.data.entity.SiiAutoComisorioEntity;
 import com.coljuegos.sivo.data.entity.SiiGrupoFiscalizacionEntity;
 import com.coljuegos.sivo.data.entity.visita.SiiActaVisitaEntity;
+import com.coljuegos.sivo.data.entity.visita.SiiImagenActaEntity;
 import com.coljuegos.sivo.data.entity.visita.SiiVerificacionContractualEntity;
 import com.coljuegos.sivo.data.entity.visita.SiiVerificacionSiplaftEntity;
 import com.coljuegos.sivo.data.repository.ActaVisitaRepository;
 import com.coljuegos.sivo.data.repository.AutoComisorioRepository;
 import com.coljuegos.sivo.data.repository.VerificacionContractualRepository;
 import com.coljuegos.sivo.data.repository.VerificacionSiplaftRepository;
-import com.coljuegos.sivo.service.imagen.ImagenProcessingService;
+import com.coljuegos.sivo.service.imagen.ImagenStorageService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.zip.DataFormatException;
 
@@ -35,7 +37,7 @@ public class UploadActaServiceImpl implements UploadActaService {
 
     private final VerificacionSiplaftRepository verificacionSiplaftRepository;
 
-    private final ImagenProcessingService imagenProcessingService;
+    private final ImagenStorageService imagenStorageService;
 
     @Override
     @Transactional
@@ -85,6 +87,14 @@ public class UploadActaServiceImpl implements UploadActaService {
             if (actaCompleteDTO.getVerificacionSiplaft() != null) {
                 this.guardarVerificacionSiplaft(
                         actaCompleteDTO.getVerificacionSiplaft(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar las imágenes del acta
+            if (actaCompleteDTO.getImagenes() != null && !actaCompleteDTO.getImagenes().isEmpty()) {
+                this.guardarImagenes(
+                        actaCompleteDTO.getImagenes(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
             }
@@ -266,55 +276,39 @@ public class UploadActaServiceImpl implements UploadActaService {
     }
 
     /**
-     * Procesa y descomprime una imagen del acta
-     *
-     * @param imagenDTO Datos de la imagen comprimida
-     * @return Array de bytes de la imagen descomprimida, o null si hay error
+     * Guarda las imágenes del acta
      */
-    private byte[] procesarImagen(ImagenDTO imagenDTO) {
-        if (imagenDTO == null) {
-            log.warn("ImagenDTO es null - omitiendo");
-            return null;
-        }
-
-        if (imagenDTO.getImagenBase64() == null || imagenDTO.getImagenBase64().trim().isEmpty()) {
-            log.warn("Imagen '{}' no tiene datos base64 - omitiendo",
-                    imagenDTO.getNombreImagen());
-            return null;
-        }
-
+    private void guardarImagenes(List<ImagenDTO> imagenes,
+                                 SiiAutoComisorioEntity autoComisorio,
+                                 Integer numActa) {
         try {
-            log.debug("Descomprimiendo imagen: nombre='{}', descripcion='{}', fragmento='{}'",
-                    imagenDTO.getNombreImagen(),
-                    imagenDTO.getDescripcion(),
-                    imagenDTO.getFragmentOrigen());
+            if (imagenes == null || imagenes.isEmpty()) {
+                log.debug("No hay imágenes para guardar en acta {}", numActa);
+                return;
+            }
 
-            byte[] imagenDescomprimida = this.imagenProcessingService.descomprimirImagen(
-                    imagenDTO.getImagenBase64());
+            log.info("Iniciando guardado de {} imágenes para acta {}", imagenes.size(), numActa);
 
-            log.info("Imagen '{}' descomprimida exitosamente. Tamaño: {} bytes",
-                    imagenDTO.getNombreImagen(),
-                    imagenDescomprimida.length);
+            // Guardar las imágenes usando el servicio de almacenamiento
+            List<SiiImagenActaEntity> imagenesGuardadas = this.imagenStorageService.guardarImagenes(
+                    imagenes,
+                    autoComisorio,
+                    numActa);
 
-            return imagenDescomprimida;
+            log.info("Se guardaron exitosamente {}/{} imágenes para acta {}",
+                    imagenesGuardadas.size(), imagenes.size(), numActa);
 
-        } catch (DataFormatException e) {
-            log.error("Formato de compresión inválido para imagen '{}': {}",
-                    imagenDTO.getNombreImagen(),
-                    e.getMessage());
-            return null;
-
-        } catch (IOException e) {
-            log.error("Error de I/O al descomprimir imagen '{}': {}",
-                    imagenDTO.getNombreImagen(),
-                    e.getMessage());
-            return null;
+            // Si no se guardaron todas las imágenes, registrar advertencia
+            if (imagenesGuardadas.size() < imagenes.size()) {
+                log.warn("Solo se guardaron {}/{} imágenes para acta {}. Revisar logs para detalles.",
+                        imagenesGuardadas.size(), imagenes.size(), numActa);
+            }
 
         } catch (Exception e) {
-            log.error("Error inesperado al procesar imagen '{}': {}",
-                    imagenDTO.getNombreImagen(),
-                    e.getMessage(), e);
-            return null;
+            // Log del error pero no lanzar excepción para no fallar toda la transacción
+            // Las imágenes son importante pero no críticas
+            log.error("Error al guardar imágenes del acta {}: {}. Se continuará con el resto del proceso.",
+                    numActa, e.getMessage(), e);
         }
     }
 

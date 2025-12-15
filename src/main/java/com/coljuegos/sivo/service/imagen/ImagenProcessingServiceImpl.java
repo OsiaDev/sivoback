@@ -1,7 +1,7 @@
 package com.coljuegos.sivo.service.imagen;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
+import java.util.Base64;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -31,12 +31,12 @@ public class ImagenProcessingServiceImpl implements ImagenProcessingService {
 
         log.debug("Iniciando descompresión de imagen. Longitud base64: {}", base64Compressed.length());
 
-        byte[] imagenDescomprimida = null;
+        byte[] imagenDescomprimida;
         Inflater inflater = null;
 
         try {
             // Decodificar base64 para obtener datos comprimidos
-            byte[] compressed = Base64.decodeBase64(base64Compressed);
+            byte[] compressed = Base64.getDecoder().decode(base64Compressed);
             log.debug("Datos comprimidos decodificados. Tamaño: {} bytes", compressed.length);
 
             // Inicializar inflater para descompresión ZLIB

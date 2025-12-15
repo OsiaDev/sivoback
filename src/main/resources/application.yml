@@ -7,9 +7,9 @@ spring:
     name: Sivo
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/umas_db
-    username: umas_user
-    password: umas_pass
+    url: jdbc:postgresql://localhost:5433/siicol_db
+    username: siicol_user
+    password: siicol_pass
     driver-class-name: org.postgresql.Driver
 
   jpa:
