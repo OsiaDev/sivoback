@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -39,6 +40,9 @@ public class SiiAutoComisorioEntity implements Serializable {
 
     @Column(name = "AUC_TIPO_VISITA")
     private String aucTipoVisita;
+
+    @Column(name = "AUC_FECHA_VISITA_REALIZADA")
+    private LocalDateTime aucFechaVisitaRealizada;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "AUC_ESTADO_VISITA")

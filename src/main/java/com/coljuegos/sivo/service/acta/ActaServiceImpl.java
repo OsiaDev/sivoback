@@ -1,8 +1,6 @@
 package com.coljuegos.sivo.service.acta;
 
 import com.coljuegos.sivo.data.dto.*;
-import com.coljuegos.sivo.data.dto.acta.ActaCompleteDTO;
-import com.coljuegos.sivo.data.dto.acta.ActaSincronizacionResponseDTO;
 import com.coljuegos.sivo.data.entity.*;
 import com.coljuegos.sivo.data.repository.AutoComisorioRepository;
 import com.coljuegos.sivo.data.repository.InventarioRepository;

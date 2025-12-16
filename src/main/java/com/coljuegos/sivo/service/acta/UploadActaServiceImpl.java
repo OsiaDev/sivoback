@@ -102,6 +102,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             // Cambiar el estado de visita a VISITADO
             EstadoVisita estadoAnterior = autoComisorio.getEstadoVisita();
             autoComisorio.setEstadoVisita(EstadoVisita.VISITADO);
+            autoComisorio.setAucFechaVisitaRealizada(LocalDateTime.now());
 
             // Guardar los cambios
             this.autoComisorioRepository.save(autoComisorio);
