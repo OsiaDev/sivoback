@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "SII_ACTA_VISITA")
+@Table(name = "SII_ACTA_VISITA_SIVO")
 public class SiiActaVisitaEntity implements Serializable {
 
     @Id
     @Column(name = "AVI_CODIGO", nullable = false)
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "SEQ_ACTA_VISITA_COD")
-    @SequenceGenerator(name = "SEQ_ACTA_VISITA_COD", sequenceName = "SEQ_ACTA_VISITA_COD", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "SEQ_ACTA_VISITA_SIVO_COD")
+    @SequenceGenerator(name = "SEQ_ACTA_VISITA_SIVO_COD", sequenceName = "SEQ_ACTA_VISITA_SIVO_COD", allocationSize = 1)
     private Long aviCodigo;
 
     @Column(name = "AVI_NUM_ACTA", nullable = false)
