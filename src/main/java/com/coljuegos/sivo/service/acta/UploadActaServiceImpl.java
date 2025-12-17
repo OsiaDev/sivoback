@@ -13,16 +13,16 @@ import com.coljuegos.sivo.data.repository.AutoComisorioRepository;
 import com.coljuegos.sivo.data.repository.VerificacionContractualRepository;
 import com.coljuegos.sivo.data.repository.VerificacionSiplaftRepository;
 import com.coljuegos.sivo.service.imagen.ImagenStorageService;
+import com.coljuegos.sivo.service.inventario.InventarioRegistradoStorageService;
+import com.coljuegos.sivo.service.novedad.NovedadRegistradaStorageService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.zip.DataFormatException;
 
 @Slf4j
 @Service
@@ -38,6 +38,10 @@ public class UploadActaServiceImpl implements UploadActaService {
     private final VerificacionSiplaftRepository verificacionSiplaftRepository;
 
     private final ImagenStorageService imagenStorageService;
+
+    private final InventarioRegistradoStorageService inventarioRegistradoStorageService;
+
+    private final NovedadRegistradaStorageService novedadRegistradaStorageService;
 
     @Override
     @Transactional
@@ -87,6 +91,24 @@ public class UploadActaServiceImpl implements UploadActaService {
             if (actaCompleteDTO.getVerificacionSiplaft() != null) {
                 this.guardarVerificacionSiplaft(
                         actaCompleteDTO.getVerificacionSiplaft(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar inventarios registrados
+            if (actaCompleteDTO.getInventariosRegistrados() != null
+                    && !actaCompleteDTO.getInventariosRegistrados().isEmpty()) {
+                this.guardarInventarios(
+                        actaCompleteDTO.getInventariosRegistrados(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar novedades registradas
+            if (actaCompleteDTO.getNovedadesRegistradas() != null
+                    && !actaCompleteDTO.getNovedadesRegistradas().isEmpty()) {
+                this.guardarNovedades(
+                        actaCompleteDTO.getNovedadesRegistradas(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
             }
@@ -276,6 +298,66 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
+    private void guardarInventarios(List<InventarioRegistradoDTO> inventarios,
+                                    SiiAutoComisorioEntity autoComisorio,
+                                    Integer numActa) {
+        try {
+            if (inventarios == null || inventarios.isEmpty()) {
+                log.debug("No hay inventarios para guardar en acta {}", numActa);
+                return;
+            }
+
+            log.info("Iniciando guardado de {} inventarios para acta {}", inventarios.size(), numActa);
+
+            List<?> inventariosGuardados = this.inventarioRegistradoStorageService.guardarInventarios(
+                    inventarios,
+                    autoComisorio,
+                    numActa);
+
+            log.info("Se guardaron exitosamente {}/{} inventarios para acta {}",
+                    inventariosGuardados.size(), inventarios.size(), numActa);
+
+            if (inventariosGuardados.size() < inventarios.size()) {
+                log.warn("Solo se guardaron {}/{} inventarios para acta {}. Revisar logs para detalles.",
+                        inventariosGuardados.size(), inventarios.size(), numActa);
+            }
+
+        } catch (Exception e) {
+            log.error("Error al guardar inventarios del acta {}: {}. Se continuará con el resto del proceso.",
+                    numActa, e.getMessage(), e);
+        }
+    }
+
+    private void guardarNovedades(List<NovedadRegistradaDTO> novedades,
+                                  SiiAutoComisorioEntity autoComisorio,
+                                  Integer numActa) {
+        try {
+            if (novedades == null || novedades.isEmpty()) {
+                log.debug("No hay novedades para guardar en acta {}", numActa);
+                return;
+            }
+
+            log.info("Iniciando guardado de {} novedades para acta {}", novedades.size(), numActa);
+
+            List<?> novedadesGuardadas = this.novedadRegistradaStorageService.guardarNovedades(
+                    novedades,
+                    autoComisorio,
+                    numActa);
+
+            log.info("Se guardaron exitosamente {}/{} novedades para acta {}",
+                    novedadesGuardadas.size(), novedades.size(), numActa);
+
+            if (novedadesGuardadas.size() < novedades.size()) {
+                log.warn("Solo se guardaron {}/{} novedades para acta {}. Revisar logs para detalles.",
+                        novedadesGuardadas.size(), novedades.size(), numActa);
+            }
+
+        } catch (Exception e) {
+            log.error("Error al guardar novedades del acta {}: {}. Se continuará con el resto del proceso.",
+                    numActa, e.getMessage(), e);
+        }
+    }
+
     /**
      * Guarda las imágenes del acta
      */
@@ -306,7 +388,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             }
 
         } catch (Exception e) {
-            // Log del error pero no lanzar excepción para no fallar toda la transacción
+            // Log del error, pero no lanzar excepción para no fallar toda la transacción
             // Las imágenes son importante pero no críticas
             log.error("Error al guardar imágenes del acta {}: {}. Se continuará con el resto del proceso.",
                     numActa, e.getMessage(), e);
