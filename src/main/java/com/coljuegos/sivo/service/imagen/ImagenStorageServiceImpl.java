@@ -28,11 +28,13 @@ import java.util.zip.DataFormatException;
 public class ImagenStorageServiceImpl implements ImagenStorageService {
 
     private final ImagenActaRepository imagenActaRepository;
-
     private final ImagenProcessingService imagenProcessingService;
 
     @Value("${acta.imagenes.base-path:${user.home}/sivo-imagenes}")
     private String baseImagePath;
+
+    @Value("${acta.imagenes.relative-path:/sivo/actas}")
+    private String relativePath;
 
     @Value("${acta.imagenes.max-size:15728640}")
     private long maxImageSize;
@@ -49,7 +51,7 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
     public List<SiiImagenActaEntity> guardarImagenes(
             Collection<ImagenDTO> imagenes,
             SiiAutoComisorioEntity autoComisorio,
-            Integer numActa) throws IOException, DataFormatException {
+            Integer numActa) {
 
         if (imagenes == null || imagenes.isEmpty()) {
             log.debug("No hay imágenes para guardar en acta {}", numActa);
@@ -193,24 +195,24 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
         }
     }
 
-    /**
-     * Genera la estructura de directorios para organizar las imágenes por fecha y acta
-     * Formato: YYYY/MM/DD/acta_NNNNNN
-     */
     private String generarPathRelativo(Integer numActa) {
         LocalDate ahora = LocalDate.now();
+
+        // Formato de fecha: YYYY/MM/DD (compatible con legacy)
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         String fechaPath = ahora.format(formatter);
 
-        return String.format("%s/acta_%06d", fechaPath, numActa);
+        // relativePath viene de application.yml (por defecto: /sivo/actas)
+        // Formato final: /sivo/actas/2024/12/18/acta_000123
+        return String.format("%s/%s/acta_%06d", relativePath, fechaPath, numActa);
     }
 
-    /**
-     * Genera un nombre único para el archivo físico preservando la extensión original
-     */
     private String generarNombreArchivoUnico(String nombreOriginal) {
+        // Timestamp en formato: yyyyMMddHHmmss
         String timestamp = LocalDateTime.now().format(
                 DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+        // UUID corto (primeros 8 caracteres)
         String uuid = UUID.randomUUID().toString().substring(0, 8);
 
         // Extraer extensión del nombre original
@@ -222,18 +224,17 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
         return String.format("%s_%s%s", timestamp, uuid, extension);
     }
 
-    /**
-     * Guarda físicamente la imagen en el sistema de archivos
-     */
     private Path guardarImagenFisica(
             byte[] imagenBytes,
             String pathRelativo,
             String nombreArchivo) throws IOException {
 
-        // Construir ruta completa
+        // Construir ruta completa del directorio
+        // baseImagePath = E:/archivoSiicol (desde application.yml)
+        // pathRelativo = /sivo/actas/2024/12/18/acta_000123
         Path directorioCompleto = Paths.get(baseImagePath, pathRelativo);
 
-        // Crear directorios si no existen
+        // Crear directorios si no existen (mkdir -p)
         if (!Files.exists(directorioCompleto)) {
             Files.createDirectories(directorioCompleto);
             log.debug("Directorios creados: {}", directorioCompleto);
@@ -258,7 +259,9 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
     }
 
     /**
-     * Elimina un archivo físico del sistema
+     * Elimina un archivo físico del sistema de archivos
+     *
+     * @param pathRelativo Path relativo del archivo a eliminar
      */
     private void eliminarArchivoFisico(String pathRelativo) {
         try {
@@ -279,6 +282,9 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
 
     /**
      * Detecta el tipo MIME basándose en la extensión del archivo
+     *
+     * @param nombreArchivo Nombre del archivo con extensión
+     * @return Tipo MIME detectado
      */
     private String detectarTipoMime(String nombreArchivo) {
         if (nombreArchivo == null) {

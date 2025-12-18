@@ -21,6 +21,13 @@ spring:
       hibernate:
         format_sql: true
 
+acta:
+  imagenes:
+    base-path: ${SIVO_STORAGE_PATH:D:/archivoSiicol}
+    relative-path: /sivo/actas
+    max-size: 15728640
+    buffer-size: 4096
+
 jwt:
   secret: e3pLV3tPUUg3KiI1OFYkYj04Sn1pQl5IeTgteWdXRyhfeWU1TmU2UmNMZSM0YFM/VEtNey84TD9NPUs0dFpF
   expirationMs: 43200

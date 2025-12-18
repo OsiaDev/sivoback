@@ -21,13 +21,11 @@ public interface ImagenStorageService {
      * @param autoComisorio Auto comisorio asociado
      * @param numActa Número del acta
      * @return Lista de entidades guardadas
-     * @throws IOException Si hay error al guardar las imágenes físicamente
-     * @throws DataFormatException Si hay error en el formato de compresión
      */
     List<SiiImagenActaEntity> guardarImagenes(
             Collection<ImagenDTO> imagenes,
             SiiAutoComisorioEntity autoComisorio,
-            Integer numActa) throws IOException, DataFormatException;
+            Integer numActa);
 
     /**
      * Guarda una sola imagen
