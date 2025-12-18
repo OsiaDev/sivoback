@@ -25,7 +25,6 @@ import java.util.zip.DataFormatException;
 
 @Slf4j
 @Service
-@AllArgsConstructor
 public class FirmaActaStorageServiceImpl implements FirmaActaStorageService {
 
     private final FirmaActaRepository firmaActaRepository;
@@ -39,6 +38,12 @@ public class FirmaActaStorageServiceImpl implements FirmaActaStorageService {
 
     @Value("${acta.imagenes.max-size:15728640}")
     private long maxImageSize;
+
+    public FirmaActaStorageServiceImpl(FirmaActaRepository firmaActaRepository,
+                                       ImagenProcessingService imagenProcessingService) {
+        this.firmaActaRepository = firmaActaRepository;
+        this.imagenProcessingService = imagenProcessingService;
+    }
 
     @Override
     @Transactional
