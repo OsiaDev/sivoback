@@ -30,7 +30,7 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
     private final ImagenActaRepository imagenActaRepository;
     private final ImagenProcessingService imagenProcessingService;
 
-    @Value("${acta.imagenes.base-path:${user.home}/sivo-imagenes}")
+    @Value("${acta.imagenes.base-path:D:/archivoSiicol}")
     private String baseImagePath;
 
     @Value("${acta.imagenes.relative-path:/sivo/actas}")
