@@ -4,14 +4,12 @@ import com.coljuegos.sivo.data.dto.acta.*;
 import com.coljuegos.sivo.data.entity.EstadoVisita;
 import com.coljuegos.sivo.data.entity.SiiAutoComisorioEntity;
 import com.coljuegos.sivo.data.entity.SiiGrupoFiscalizacionEntity;
-import com.coljuegos.sivo.data.entity.visita.SiiActaVisitaEntity;
-import com.coljuegos.sivo.data.entity.visita.SiiImagenActaEntity;
-import com.coljuegos.sivo.data.entity.visita.SiiVerificacionContractualEntity;
-import com.coljuegos.sivo.data.entity.visita.SiiVerificacionSiplaftEntity;
+import com.coljuegos.sivo.data.entity.visita.*;
 import com.coljuegos.sivo.data.repository.ActaVisitaRepository;
 import com.coljuegos.sivo.data.repository.AutoComisorioRepository;
 import com.coljuegos.sivo.data.repository.VerificacionContractualRepository;
 import com.coljuegos.sivo.data.repository.VerificacionSiplaftRepository;
+import com.coljuegos.sivo.service.firma.FirmaActaStorageService;
 import com.coljuegos.sivo.service.imagen.ImagenStorageService;
 import com.coljuegos.sivo.service.inventario.InventarioRegistradoStorageService;
 import com.coljuegos.sivo.service.novedad.NovedadRegistradaStorageService;
@@ -42,6 +40,8 @@ public class UploadActaServiceImpl implements UploadActaService {
     private final InventarioRegistradoStorageService inventarioRegistradoStorageService;
 
     private final NovedadRegistradaStorageService novedadRegistradaStorageService;
+
+    private final FirmaActaStorageService firmaActaStorageService;
 
     @Override
     @Transactional
@@ -117,6 +117,14 @@ public class UploadActaServiceImpl implements UploadActaService {
             if (actaCompleteDTO.getImagenes() != null && !actaCompleteDTO.getImagenes().isEmpty()) {
                 this.guardarImagenes(
                         actaCompleteDTO.getImagenes(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar las firmas del acta
+            if (actaCompleteDTO.getFirmaActa() != null) {
+                this.guardarFirmasActa(
+                        actaCompleteDTO.getFirmaActa(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
             }
@@ -391,6 +399,31 @@ public class UploadActaServiceImpl implements UploadActaService {
             // Log del error, pero no lanzar excepción para no fallar toda la transacción
             // Las imágenes son importante pero no críticas
             log.error("Error al guardar imágenes del acta {}: {}. Se continuará con el resto del proceso.",
+                    numActa, e.getMessage(), e);
+        }
+    }
+
+    private void guardarFirmasActa(FirmaActaDTO firmaActaDTO,
+                                   SiiAutoComisorioEntity autoComisorio,
+                                   Integer numActa) {
+        try {
+            if (firmaActaDTO == null) {
+                log.debug("No hay firmas para guardar en acta {}", numActa);
+                return;
+            }
+
+            log.info("Iniciando guardado de firmas para acta {}", numActa);
+
+            SiiFirmaActaEntity firmaGuardada = this.firmaActaStorageService.guardarFirmasActa(
+                    firmaActaDTO,
+                    autoComisorio,
+                    numActa);
+
+            log.info("Firmas guardadas exitosamente para acta {}, código: {}",
+                    numActa, firmaGuardada.getFiaCodigo());
+
+        } catch (Exception e) {
+            log.error("Error al guardar firmas del acta {}: {}. Se continuará con el resto del proceso.",
                     numActa, e.getMessage(), e);
         }
     }
