@@ -16,4 +16,12 @@ public class InventarioRegistradoDTO {
     private String coinOutSclm;
     private String jackpotSclm;
     private String observaciones;
+    private Boolean codigoApuestaDiferente;
+    private String codigoApuestaDiferenteValor;
+    private Boolean serialVerificado;
+    private String serialDiferente;
+    private Boolean descripcionJuego;
+    private Boolean planPremios;
+    private Boolean valorPremios;
+    private Boolean contadoresVerificado;
 }

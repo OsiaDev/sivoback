@@ -82,17 +82,39 @@ public class InventarioRegistradoStorageServiceImpl implements InventarioRegistr
         log.debug("Procesando inventario con serial: {}", inventarioDTO.getSerial());
 
         SiiInventarioRegistradoEntity inventarioEntity = new SiiInventarioRegistradoEntity();
-
-        // Mapear campos obligatorios
         inventarioEntity.setSiiAutoComisorio(autoComisorio);
         inventarioEntity.setInrNumActa(numActa);
         inventarioEntity.setInrSerial(inventarioDTO.getSerial());
 
-        // Mapear campos opcionales
         inventarioEntity.setInrMarca(inventarioDTO.getMarca());
         inventarioEntity.setInrCodigoApuesta(inventarioDTO.getCodigoApuesta());
         inventarioEntity.setInrEstado(inventarioDTO.getEstado());
+
+        inventarioEntity.setInrCodApuestaDiferente(
+                convertBooleanToInteger(inventarioDTO.getCodigoApuestaDiferente())
+        );
+        inventarioEntity.setInrCodApuestaDiferenteValor(
+                inventarioDTO.getCodigoApuestaDiferenteValor()
+        );
+        inventarioEntity.setInrSerialVerificado(
+                convertBooleanToInteger(inventarioDTO.getSerialVerificado())
+        );
+        inventarioEntity.setInrSerialDiferente(
+                inventarioDTO.getSerialDiferente()
+        );
+        inventarioEntity.setInrDescripcionJuego(
+                convertBooleanToInteger(inventarioDTO.getDescripcionJuego())
+        );
+        inventarioEntity.setInrPlanPremios(
+                convertBooleanToInteger(inventarioDTO.getPlanPremios())
+        );
+        inventarioEntity.setInrValorPremios(
+                convertBooleanToInteger(inventarioDTO.getValorPremios())
+        );
         inventarioEntity.setInrValorCredito(inventarioDTO.getValorCredito());
+        inventarioEntity.setInrContadoresVerificado(
+                convertBooleanToInteger(inventarioDTO.getContadoresVerificado())
+        );
         inventarioEntity.setInrCoinInMet(inventarioDTO.getCoinInMet());
         inventarioEntity.setInrCoinOutMet(inventarioDTO.getCoinOutMet());
         inventarioEntity.setInrJackpotMet(inventarioDTO.getJackpotMet());
@@ -108,6 +130,13 @@ public class InventarioRegistradoStorageServiceImpl implements InventarioRegistr
                 inventarioGuardado.getInrCodigo(), numActa, inventarioGuardado.getInrSerial());
 
         return inventarioGuardado;
+    }
+
+    private Integer convertBooleanToInteger(Boolean value) {
+        if (value == null) {
+            return null;
+        }
+        return value ? 1 : 0;
     }
 
     @Override
