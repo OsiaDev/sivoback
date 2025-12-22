@@ -19,7 +19,7 @@ public interface AutoComisorioRepository extends JpaRepository<SiiAutoComisorioE
             "WHERE p.per_codigo = :perCodigo " +
             "AND ac.auc_estado = :estado " +
             "AND ac.auc_fecha >= :fechaMesAtras " +
-            "AND ( (ac.auc_tipo_visita = 'F' AND :fechaActual < ac.auc_fecha_visita) " +
+            "AND ( (ac.auc_tipo_visita = 'F' AND :fechaActual <= ac.auc_fecha_visita) " +
             "     OR ac.auc_tipo_visita IN ('C', 'F') ) " +
             "ORDER BY ac.auc_numero DESC",
             nativeQuery = true)
