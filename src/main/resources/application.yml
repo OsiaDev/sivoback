@@ -72,3 +72,12 @@ jwt:
 
 aes:
   secretKey: QwErTyUiOpAsDfGh
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never  # sin detalles para acceso público
