@@ -57,6 +57,7 @@ public class ActaServiceImpl implements ActaService {
             return this.autoComisorioRepository.findFiltradosPorPersonaEstadoTipoYFechas(
                     perCodigo,
                     ACTIVO,
+                    EstadoVisita.NO_VISITADO.name(),
                     fechaMesAtras,
                     fechaActual
             );

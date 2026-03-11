@@ -18,14 +18,16 @@ public interface AutoComisorioRepository extends JpaRepository<SiiAutoComisorioE
             "JOIN sii_persona p ON fs.per_codigo = p.per_codigo " +
             "WHERE p.per_codigo = :perCodigo " +
             "AND ac.auc_estado = :estado " +
-            "AND ac.auc_fecha >= :fechaMesAtras " +
-            "AND ( (ac.auc_tipo_visita = 'F' AND :fechaActual <= ac.auc_fecha_visita) " +
+            " " +
+            "AND ac.auc_estado_visita = :estadoVisita " +
+            "AND ( (ac.auc_tipo_visita = 'F') " +
             "     OR ac.auc_tipo_visita IN ('C', 'F') ) " +
             "ORDER BY ac.auc_numero DESC",
             nativeQuery = true)
     Collection<SiiAutoComisorioEntity> findFiltradosPorPersonaEstadoTipoYFechas(
             @Param("perCodigo") Long perCodigo,
             @Param("estado") String estado,
+            @Param("estadoVisita") String estadoVisita,
             @Param("fechaMesAtras") LocalDate fechaMesAtras,
             @Param("fechaActual") LocalDate fechaActual);
 
