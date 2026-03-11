@@ -5,10 +5,7 @@ import com.coljuegos.sivo.data.entity.EstadoVisita;
 import com.coljuegos.sivo.data.entity.SiiAutoComisorioEntity;
 import com.coljuegos.sivo.data.entity.SiiGrupoFiscalizacionEntity;
 import com.coljuegos.sivo.data.entity.visita.*;
-import com.coljuegos.sivo.data.repository.ActaVisitaRepository;
-import com.coljuegos.sivo.data.repository.AutoComisorioRepository;
-import com.coljuegos.sivo.data.repository.VerificacionContractualRepository;
-import com.coljuegos.sivo.data.repository.VerificacionSiplaftRepository;
+import com.coljuegos.sivo.data.repository.*;
 import com.coljuegos.sivo.service.firma.FirmaActaStorageService;
 import com.coljuegos.sivo.service.imagen.ImagenStorageService;
 import com.coljuegos.sivo.service.inventario.InventarioRegistradoStorageService;
@@ -34,6 +31,8 @@ public class UploadActaServiceImpl implements UploadActaService {
     private final VerificacionContractualRepository verificacionContractualRepository;
 
     private final VerificacionSiplaftRepository verificacionSiplaftRepository;
+
+    private final VerificacionJuegoResponsableRepository verificacionJuegoResponsableRepository;
 
     private final ImagenStorageService imagenStorageService;
 
@@ -91,6 +90,14 @@ public class UploadActaServiceImpl implements UploadActaService {
             if (actaCompleteDTO.getVerificacionSiplaft() != null) {
                 this.guardarVerificacionSiplaft(
                         actaCompleteDTO.getVerificacionSiplaft(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar la información de VerificacionJuegoResponsableDTO
+            if (actaCompleteDTO.getVerificacionJuegoResponsable() != null) {
+                this.guardarVerificacionJuegoResponsable(
+                        actaCompleteDTO.getVerificacionJuegoResponsable(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
             }
@@ -303,6 +310,43 @@ public class UploadActaServiceImpl implements UploadActaService {
         } catch (Exception e) {
             log.error("Error al guardar VerificacionSiplaft para acta {}: {}", numActa, e.getMessage(), e);
             throw new RuntimeException("Error al guardar verificación SIPLAFT: " + e.getMessage(), e);
+        }
+    }
+
+    private void guardarVerificacionJuegoResponsable(VerificacionJuegoResponsableDTO verificacionDTO,
+                                                     SiiAutoComisorioEntity autoComisorio,
+                                                     Integer numActa) {
+        try {
+            log.info("Guardando información de VerificacionJuegoResponsable para acta número: {}", numActa);
+
+            Optional<SiiVerificacionJuegoResponsableEntity> verificacionExistente =
+                    this.verificacionJuegoResponsableRepository.findByAutoComisorioCodigo(autoComisorio.getAucCodigo());
+
+            SiiVerificacionJuegoResponsableEntity verificacionEntity;
+
+            if (verificacionExistente.isPresent()) {
+                log.info("Actualizando registro existente de VerificacionJuegoResponsable para acta: {}", numActa);
+                verificacionEntity = verificacionExistente.get();
+            } else {
+                log.info("Creando nuevo registro de VerificacionJuegoResponsable para acta: {}", numActa);
+                verificacionEntity = new SiiVerificacionJuegoResponsableEntity();
+                verificacionEntity.setSiiAutoComisorio(autoComisorio);
+                verificacionEntity.setVjrNumActa(numActa);
+                verificacionEntity.setVjrFechaRegistro(LocalDateTime.now());
+            }
+
+            verificacionEntity.setVjrCuentaTestIdentRiesgos(verificacionDTO.getCuentaTestIdentificacionRiesgos());
+            verificacionEntity.setVjrExistenPiezasPublicitarias(verificacionDTO.getExistenPiezasPublicitarias());
+            verificacionEntity.setVjrCuentaProgramaJuegoResp(verificacionDTO.getCuentaProgramaJuegoResponsable());
+
+            this.verificacionJuegoResponsableRepository.save(verificacionEntity);
+
+            log.info("VerificacionJuegoResponsable guardada exitosamente para acta: {}, código: {}",
+                    numActa, verificacionEntity.getVjrCodigo());
+
+        } catch (Exception e) {
+            log.error("Error al guardar VerificacionJuegoResponsable para acta {}: {}", numActa, e.getMessage(), e);
+            throw new RuntimeException("Error al guardar verificación de juego responsable: " + e.getMessage(), e);
         }
     }
 

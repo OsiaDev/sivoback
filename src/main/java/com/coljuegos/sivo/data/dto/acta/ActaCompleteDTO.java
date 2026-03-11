@@ -11,6 +11,7 @@ public class ActaCompleteDTO {
     private ActaVisitaDTO actaVisita;
     private VerificacionContractualDTO verificacionContractual;
     private VerificacionSiplaftDTO verificacionSiplaft;
+    private VerificacionJuegoResponsableDTO verificacionJuegoResponsable;
     private List<InventarioRegistradoDTO> inventariosRegistrados;
     private List<NovedadRegistradaDTO> novedadesRegistradas;
     private FirmaActaDTO firmaActa;
