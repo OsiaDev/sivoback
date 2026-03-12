@@ -156,6 +156,9 @@ public class SiiInventarioRegistradoEntity implements Serializable {
     @Column(name = "INR_OBSERVACIONES", columnDefinition = "TEXT")
     private String inrObservaciones;
 
+    @Column(name = "INR_NUMERO_INTERNO_MET_OPER", length = 100)
+    private String inrNumeroInternoMetOper;
+
     @Column(name = "INR_FECHA_REGISTRO", nullable = false)
     private LocalDateTime inrFechaRegistro;
 
