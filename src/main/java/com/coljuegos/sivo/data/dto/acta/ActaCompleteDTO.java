@@ -16,4 +16,5 @@ public class ActaCompleteDTO {
     private List<NovedadRegistradaDTO> novedadesRegistradas;
     private FirmaActaDTO firmaActa;
     private List<ImagenDTO> imagenes;
+    private ResumenInventarioDTO resumenInventario;
 }
