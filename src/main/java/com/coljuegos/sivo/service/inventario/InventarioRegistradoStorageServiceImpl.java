@@ -122,6 +122,7 @@ public class InventarioRegistradoStorageServiceImpl implements InventarioRegistr
         inventarioEntity.setInrCoinOutSclm(inventarioDTO.getCoinOutSclm());
         inventarioEntity.setInrJackpotSclm(inventarioDTO.getJackpotSclm());
         inventarioEntity.setInrObservaciones(inventarioDTO.getObservaciones());
+        inventarioEntity.setInrNumeroInternoMetOper(inventarioDTO.getNumeroInternoMetOperador());
 
         SiiInventarioRegistradoEntity inventarioGuardado =
                 this.inventarioRegistradoRepository.save(inventarioEntity);

@@ -24,4 +24,5 @@ public class InventarioRegistradoDTO {
     private Boolean planPremios;
     private Boolean valorPremios;
     private Boolean contadoresVerificado;
+    private String numeroInternoMetOperador;
 }
