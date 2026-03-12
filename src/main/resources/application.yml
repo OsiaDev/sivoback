@@ -61,7 +61,7 @@ spring:
 
 acta:
   imagenes:
-    base-path: ${SIVO_STORAGE_PATH:D:/archivoSiicol}
+    base-path: ${SIVO_STORAGE_PATH:E:/archivoSiicol}
     relative-path: /sivo/actas
     max-size: 15728640
     buffer-size: 4096

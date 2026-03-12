@@ -42,6 +42,8 @@ public class UploadActaServiceImpl implements UploadActaService {
 
     private final FirmaActaStorageService firmaActaStorageService;
 
+    private final ResumenInventarioRepository resumenInventarioRepository;
+
     @Override
     @Transactional
     public ActaSincronizacionResponseDTO procesarActaSubida(ActaCompleteDTO actaCompleteDTO, Long perCodigo) {
@@ -135,6 +137,14 @@ public class UploadActaServiceImpl implements UploadActaService {
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
             }
+
+            // Guardar resumen del inventario (incluye coordenadas GPS del acta)
+            this.guardarResumenInventario(
+                    actaCompleteDTO.getResumenInventario(),
+                    actaCompleteDTO.getLatitud(),
+                    actaCompleteDTO.getLongitud(),
+                    autoComisorio,
+                    actaCompleteDTO.getNumActa());
 
             // Cambiar el estado de visita a VISITADO
             EstadoVisita estadoAnterior = autoComisorio.getEstadoVisita();
@@ -469,6 +479,48 @@ public class UploadActaServiceImpl implements UploadActaService {
         } catch (Exception e) {
             log.error("Error al guardar firmas del acta {}: {}. Se continuará con el resto del proceso.",
                     numActa, e.getMessage(), e);
+        }
+    }
+
+    private void guardarResumenInventario(ResumenInventarioDTO resumenDTO,
+                                          Double latitud,
+                                          Double longitud,
+                                          SiiAutoComisorioEntity autoComisorio,
+                                          Integer numActa) {
+        try {
+            log.info("Guardando ResumenInventario para acta número: {}", numActa);
+
+            Optional<SiiResumenInventarioEntity> resumenExistente =
+                    this.resumenInventarioRepository.findByAutoComisorioCodigo(autoComisorio.getAucCodigo());
+
+            SiiResumenInventarioEntity resumenEntity;
+
+            if (resumenExistente.isPresent()) {
+                log.info("Actualizando registro existente de ResumenInventario para acta: {}", numActa);
+                resumenEntity = resumenExistente.get();
+            } else {
+                log.info("Creando nuevo registro de ResumenInventario para acta: {}", numActa);
+                resumenEntity = new SiiResumenInventarioEntity();
+                resumenEntity.setSiiAutoComisorio(autoComisorio);
+                resumenEntity.setRsiNumActa(numActa);
+                resumenEntity.setRsiFechaRegistro(LocalDateTime.now());
+            }
+
+            // Notas del resumen (puede venir null si el DTO es null)
+            resumenEntity.setRsiNotasResumen(resumenDTO != null ? resumenDTO.getNotasResumen() : null);
+
+            // Coordenadas GPS tomadas del raíz del ActaCompleteDTO
+            resumenEntity.setRsiLatitud(latitud);
+            resumenEntity.setRsiLongitud(longitud);
+
+            this.resumenInventarioRepository.save(resumenEntity);
+
+            log.info("ResumenInventario guardado exitosamente para acta: {}, código: {}",
+                    numActa, resumenEntity.getRsiCodigo());
+
+        } catch (Exception e) {
+            log.error("Error al guardar ResumenInventario para acta {}: {}", numActa, e.getMessage(), e);
+            throw new RuntimeException("Error al guardar resumen de inventario: " + e.getMessage(), e);
         }
     }
 
