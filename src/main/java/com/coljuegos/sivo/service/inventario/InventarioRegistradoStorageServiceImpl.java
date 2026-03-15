@@ -91,30 +91,22 @@ public class InventarioRegistradoStorageServiceImpl implements InventarioRegistr
         inventarioEntity.setInrEstado(inventarioDTO.getEstado());
 
         inventarioEntity.setInrCodApuestaDiferente(
-                convertBooleanToInteger(inventarioDTO.getCodigoApuestaDiferente())
-        );
+                convertBooleanToInteger(inventarioDTO.getCodigoApuestaDiferente()));
         inventarioEntity.setInrCodApuestaDiferenteValor(
-                inventarioDTO.getCodigoApuestaDiferenteValor()
-        );
+                inventarioDTO.getCodigoApuestaDiferenteValor());
         inventarioEntity.setInrSerialVerificado(
-                convertBooleanToInteger(inventarioDTO.getSerialVerificado())
-        );
+                convertBooleanToInteger(inventarioDTO.getSerialVerificado()));
         inventarioEntity.setInrSerialDiferente(
-                inventarioDTO.getSerialDiferente()
-        );
+                inventarioDTO.getSerialDiferente());
         inventarioEntity.setInrDescripcionJuego(
-                convertBooleanToInteger(inventarioDTO.getDescripcionJuego())
-        );
+                convertBooleanToInteger(inventarioDTO.getDescripcionJuego()));
         inventarioEntity.setInrPlanPremios(
-                convertBooleanToInteger(inventarioDTO.getPlanPremios())
-        );
+                convertBooleanToInteger(inventarioDTO.getPlanPremios()));
         inventarioEntity.setInrValorPremios(
-                convertBooleanToInteger(inventarioDTO.getValorPremios())
-        );
+                convertBooleanToInteger(inventarioDTO.getValorPremios()));
         inventarioEntity.setInrValorCredito(inventarioDTO.getValorCredito());
         inventarioEntity.setInrContadoresVerificado(
-                convertBooleanToInteger(inventarioDTO.getContadoresVerificado())
-        );
+                convertBooleanToInteger(inventarioDTO.getContadoresVerificado()));
         inventarioEntity.setInrCoinInMet(inventarioDTO.getCoinInMet());
         inventarioEntity.setInrCoinOutMet(inventarioDTO.getCoinOutMet());
         inventarioEntity.setInrJackpotMet(inventarioDTO.getJackpotMet());
@@ -124,8 +116,7 @@ public class InventarioRegistradoStorageServiceImpl implements InventarioRegistr
         inventarioEntity.setInrObservaciones(inventarioDTO.getObservaciones());
         inventarioEntity.setInrNumeroInternoMetOper(inventarioDTO.getNumeroInternoMetOperador());
 
-        SiiInventarioRegistradoEntity inventarioGuardado =
-                this.inventarioRegistradoRepository.save(inventarioEntity);
+        SiiInventarioRegistradoEntity inventarioGuardado = this.inventarioRegistradoRepository.save(inventarioEntity);
 
         log.info("Inventario guardado: código={}, acta={}, serial={}",
                 inventarioGuardado.getInrCodigo(), numActa, inventarioGuardado.getInrSerial());
@@ -146,8 +137,8 @@ public class InventarioRegistradoStorageServiceImpl implements InventarioRegistr
         try {
             log.info("Eliminando inventarios existentes del acta {}", numActa);
 
-            Collection<SiiInventarioRegistradoEntity> inventariosExistentes =
-                    this.inventarioRegistradoRepository.findByNumActa(numActa);
+            Collection<SiiInventarioRegistradoEntity> inventariosExistentes = this.inventarioRegistradoRepository
+                    .findByNumActa(numActa);
 
             if (inventariosExistentes.isEmpty()) {
                 log.debug("No hay inventarios existentes para eliminar del acta {}", numActa);
@@ -157,12 +148,14 @@ public class InventarioRegistradoStorageServiceImpl implements InventarioRegistr
             int eliminados = 0;
 
             for (SiiInventarioRegistradoEntity inventario : inventariosExistentes) {
-                try {
-                    this.inventarioRegistradoRepository.delete(inventario);
-                    eliminados++;
-                } catch (Exception e) {
-                    log.error("Error al eliminar inventario {}: {}",
-                            inventario.getInrCodigo(), e.getMessage(), e);
+                if (inventario != null) {
+                    try {
+                        this.inventarioRegistradoRepository.delete(inventario);
+                        eliminados++;
+                    } catch (Exception e) {
+                        log.error("Error al eliminar inventario {}: {}",
+                                inventario.getInrCodigo(), e.getMessage(), e);
+                    }
                 }
             }
 
