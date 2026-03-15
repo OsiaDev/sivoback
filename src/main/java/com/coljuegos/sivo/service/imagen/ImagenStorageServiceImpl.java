@@ -159,6 +159,116 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
 
     @Override
     @Transactional
+    public SiiImagenActaEntity guardarImagenIndividual(
+            ImagenDTO imagenDTO,
+            SiiAutoComisorioEntity autoComisorio,
+            Integer numActa) throws IOException, DataFormatException {
+
+        if (imagenDTO == null) {
+            throw new IllegalArgumentException("ImagenDTO no puede ser null");
+        }
+
+        if (imagenDTO.getImagenBase64() == null || imagenDTO.getImagenBase64().trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Imagen individual '" + imagenDTO.getNombreImagen() + "' no tiene datos base64");
+        }
+
+        log.debug("Procesando imagen individual aislada: {}", imagenDTO.getNombreImagen());
+
+        // 1. Descomprimir la imagen
+        byte[] imagenDescomprimida = this.imagenProcessingService.descomprimirImagen(
+                imagenDTO.getImagenBase64());
+
+        log.debug("Imagen aislada '{}' descomprimida: {} bytes",
+                imagenDTO.getNombreImagen(), imagenDescomprimida.length);
+
+        // 2. Validar tamaño
+        if (imagenDescomprimida.length > maxImageSize) {
+            throw new IOException(
+                    String.format("Imagen '%s' excede tamaño máximo: %d bytes (máximo: %d bytes)",
+                            imagenDTO.getNombreImagen(),
+                            imagenDescomprimida.length,
+                            maxImageSize));
+        }
+
+        // 3. Verificacion de Idempotencia: Verificar en DB la existencia (ID Acta y Nombre)
+        java.util.Optional<SiiImagenActaEntity> existingEntityOpt = this.imagenActaRepository
+                .findByImaNumActaAndImaNombreImagen(numActa, imagenDTO.getNombreImagen());
+
+        if (existingEntityOpt.isPresent()) {
+            SiiImagenActaEntity existingEntity = existingEntityOpt.get();
+            String pathRelativoGuardado = existingEntity.getImaPathArchivo();
+            Path pathFisico = Paths.get(baseImagePath, pathRelativoGuardado);
+
+            // Verificar si el archivo físico realmente está ahí
+            if (Files.exists(pathFisico)) {
+                long physicalSize = Files.size(pathFisico);
+                
+                // Comparar tamaño exacto del descompreso contra el disco
+                if (physicalSize == (long) imagenDescomprimida.length) {
+                    log.info("Idempotencia exitosa: La imagen {} del acta {} existe físicamente y pesa {} bytes idénticos. Evitando re-subida.",
+                            imagenDTO.getNombreImagen(), numActa, physicalSize);
+                    return existingEntity;
+                } else {
+                    log.warn("La imagen {} existe en DB pero pesa distinto en disco (DB: {} bytes, Formato recibido: {} bytes). Se sobreescribirá.",
+                            imagenDTO.getNombreImagen(), physicalSize, imagenDescomprimida.length);
+                }
+            } else {
+                log.warn("La imagen {} existe en DB pero se eliminó o no se encuentra físicamente en la ruta: {}. Se generará de nuevo.",
+                        imagenDTO.getNombreImagen(), pathFisico.toString());
+            }
+
+            // Si llegamos aqui, significa que:
+            // O bien el archivo no existe fisicamente, O pesa diferente
+            // Re-generamos físicamente en la misma ruta
+            guardarImagenFisicaDirectamenteAIdempotente(imagenDescomprimida, pathFisico);
+            
+            // Actualizamos la DB con el nuevo peso, y demás por si acaso
+            existingEntity.setImaTamanioBytes((long) imagenDescomprimida.length);
+            return this.imagenActaRepository.save(existingEntity);
+        }
+
+        // Si la DB dice que NO existe, procedemos a una subida regular completa
+        log.info("La imagen {} no figura registrada. Generando como nueva imagen para el acta {}.", imagenDTO.getNombreImagen(), numActa);
+        
+        String pathRelativo = generarPathRelativo(numActa);
+        String nombreArchivoFisico = generarNombreArchivoUnico(imagenDTO.getNombreImagen());
+        
+        Path archivoPath = guardarImagenFisica(
+                imagenDescomprimida,
+                pathRelativo,
+                nombreArchivoFisico);
+
+        SiiImagenActaEntity imagenEntity = new SiiImagenActaEntity();
+        imagenEntity.setSiiAutoComisorio(autoComisorio);
+        imagenEntity.setImaNumActa(numActa);
+        imagenEntity.setImaNombreImagen(imagenDTO.getNombreImagen());
+        imagenEntity.setImaPathArchivo(pathRelativo + "/" + nombreArchivoFisico);
+        imagenEntity.setImaDescripcion(imagenDTO.getDescripcion());
+        imagenEntity.setImaFragmentoOrigen(imagenDTO.getFragmentOrigen());
+        imagenEntity.setImaTamanioBytes((long) imagenDescomprimida.length);
+        imagenEntity.setImaTipoMime(detectarTipoMime(imagenDTO.getNombreImagen()));
+
+        SiiImagenActaEntity nuevaGuardada = this.imagenActaRepository.save(imagenEntity);
+        
+        log.info("Registro aislado de imagen generado en BD: código={}, acta={}, archivo={}",
+                nuevaGuardada.getImaCodigo(), numActa, nuevaGuardada.getImaPathArchivo());
+
+        return nuevaGuardada;
+    }
+
+    private void guardarImagenFisicaDirectamenteAIdempotente(byte[] imagenBytes, Path archivoPathCompletado) throws IOException {
+        if (!Files.exists(archivoPathCompletado.getParent())) {
+            Files.createDirectories(archivoPathCompletado.getParent());
+        }
+        Files.write(archivoPathCompletado, imagenBytes,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
+        log.debug("Archivo sobrescrito y reconstruido: {} ({} bytes)", archivoPathCompletado, imagenBytes.length);
+    }
+
+    @Override
+    @Transactional
     public int eliminarImagenesDeActa(Integer numActa) {
         try {
             log.info("Eliminando imágenes existentes del acta {}", numActa);

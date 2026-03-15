@@ -53,4 +53,23 @@ public class ActaController {
         return ResponseEntity.ok().body(response);
     }
 
+    @PostMapping(path = "uploadImage")
+    public ResponseEntity<ActaSincronizacionResponseDTO> uploadImage(
+            @AuthenticationPrincipal UserDTO usuario,
+            @Validated @RequestBody com.coljuegos.sivo.data.dto.acta.UploadImagenActaDTO uploadImagenActaDTO) {
+        log.info("ActaController.uploadImage - Usuario: {}, NumActa: {}",
+                usuario != null ? usuario.getUsername() : "null",
+                uploadImagenActaDTO != null ? uploadImagenActaDTO.getNumActa() : "null");
+
+        if (usuario == null) {
+            throw new BadCredentialsException("Error en el token de autenticación aisaldo");
+        }
+
+        ActaSincronizacionResponseDTO response = this.uploadActaService.procesarSubidaImagenIndividual(
+                uploadImagenActaDTO,
+                usuario.getPerCodigo());
+
+        return ResponseEntity.ok().body(response);
+    }
+
 }

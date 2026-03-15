@@ -168,6 +168,51 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
+    @Override
+    @Transactional
+    public ActaSincronizacionResponseDTO procesarSubidaImagenIndividual(UploadImagenActaDTO dto, Long perCodigo) {
+        try {
+            log.info("Procesando subida de imagen individual para acta número: {}", dto.getNumActa());
+
+            if (dto.getNumActa() == null || dto.getImagen() == null) {
+                log.warn("Datos de acta inválidos o número de acta nulo para la imagen aislada");
+                return ActaSincronizacionResponseDTO.error("Datos inválidos, acta o imagen faltante");
+            }
+
+            // Buscar el auto comisorio por número de acta
+            Optional<SiiAutoComisorioEntity> autoOpt = this.autoComisorioRepository
+                    .findByAucNumero(dto.getNumActa());
+
+            if (autoOpt.isEmpty()) {
+                log.warn("No se encontró el auto comisorio con número: {}", dto.getNumActa());
+                return ActaSincronizacionResponseDTO.error(
+                        "No se encontró el acta con número: " + dto.getNumActa());
+            }
+
+            SiiAutoComisorioEntity autoComisorio = autoOpt.get();
+
+            // Verificar que el auto comisorio pertenezca al fiscalizador
+            if (!perteneceAFiscalizador(autoComisorio, perCodigo)) {
+                log.warn("El fiscalizador {} no tiene permiso para subir imagenes al acta {}",
+                        perCodigo, dto.getNumActa());
+                return ActaSincronizacionResponseDTO.error(
+                        "No tiene permisos para modificar esta acta");
+            }
+
+            // Delegar a ImagenStorageService con la logica Idempotente
+            this.imagenStorageService.guardarImagenIndividual(dto.getImagen(), autoComisorio, dto.getNumActa());
+
+            return ActaSincronizacionResponseDTO.success(
+                    dto.getNumActa(),
+                    "Imagen procesada exitosamente");
+
+        } catch (Exception e) {
+            log.error("Error al procesar subida individual de imagen: {}", e.getMessage(), e);
+            return ActaSincronizacionResponseDTO.error(
+                    "Error al procesar imagen: " + e.getMessage());
+        }
+    }
+
     private boolean perteneceAFiscalizador(SiiAutoComisorioEntity autoComisorio, Long perCodigo) {
         if (autoComisorio.getSiiGrupoFiscalizacion() == null) {
             return false;

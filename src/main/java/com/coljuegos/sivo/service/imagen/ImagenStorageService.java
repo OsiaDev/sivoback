@@ -43,6 +43,14 @@ public interface ImagenStorageService {
             Integer numActa) throws IOException, DataFormatException;
 
     /**
+     * Guarda una imagen individual previniendo duplicidad física y referencial (Idempotencia).
+     */
+    SiiImagenActaEntity guardarImagenIndividual(
+            ImagenDTO imagenDTO,
+            SiiAutoComisorioEntity autoComisorio,
+            Integer numActa) throws IOException, DataFormatException;
+
+    /**
      * Elimina imágenes antiguas de un acta (útil para actualización)
      *
      * @param numActa Número del acta
