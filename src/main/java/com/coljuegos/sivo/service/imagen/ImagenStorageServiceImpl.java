@@ -17,10 +17,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.zip.DataFormatException;
 
 @Slf4j
@@ -192,7 +189,7 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
         }
 
         // 3. Verificacion de Idempotencia: Verificar en DB la existencia (ID Acta y Nombre)
-        java.util.Optional<SiiImagenActaEntity> existingEntityOpt = this.imagenActaRepository
+        Optional<SiiImagenActaEntity> existingEntityOpt = this.imagenActaRepository
                 .findByImaNumActaAndImaNombreImagen(numActa, imagenDTO.getNombreImagen());
 
         if (existingEntityOpt.isPresent()) {

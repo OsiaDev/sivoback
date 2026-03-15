@@ -4,6 +4,7 @@ import com.coljuegos.sivo.data.dto.ObtenerActaResponseDTO;
 import com.coljuegos.sivo.data.dto.UserDTO;
 import com.coljuegos.sivo.data.dto.acta.ActaCompleteDTO;
 import com.coljuegos.sivo.data.dto.acta.ActaSincronizacionResponseDTO;
+import com.coljuegos.sivo.data.dto.acta.UploadImagenActaDTO;
 import com.coljuegos.sivo.service.acta.ActaService;
 import com.coljuegos.sivo.service.acta.UploadActaService;
 import lombok.AllArgsConstructor;
@@ -56,7 +57,7 @@ public class ActaController {
     @PostMapping(path = "uploadImage")
     public ResponseEntity<ActaSincronizacionResponseDTO> uploadImage(
             @AuthenticationPrincipal UserDTO usuario,
-            @Validated @RequestBody com.coljuegos.sivo.data.dto.acta.UploadImagenActaDTO uploadImagenActaDTO) {
+            @Validated @RequestBody UploadImagenActaDTO uploadImagenActaDTO) {
         log.info("ActaController.uploadImage - Usuario: {}, NumActa: {}",
                 usuario != null ? usuario.getUsername() : "null",
                 uploadImagenActaDTO != null ? uploadImagenActaDTO.getNumActa() : "null");
