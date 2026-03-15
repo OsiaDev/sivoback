@@ -508,6 +508,7 @@ public class UploadActaServiceImpl implements UploadActaService {
 
             // Notas del resumen (puede venir null si el DTO es null)
             resumenEntity.setRsiNotasResumen(resumenDTO != null ? resumenDTO.getNotasResumen() : null);
+            resumenEntity.setRsiObservacionesOperador(resumenDTO != null ? resumenDTO.getObservacionesOperador() : null);
 
             // Coordenadas GPS tomadas del raíz del ActaCompleteDTO
             resumenEntity.setRsiLatitud(latitud);

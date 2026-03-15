@@ -26,6 +26,9 @@ public class SiiResumenInventarioEntity implements Serializable {
     @Column(name = "RSI_NOTAS_RESUMEN", length = 4000)
     private String rsiNotasResumen;
 
+    @Column(name = "RSI_OBSERVACIONES_OPER", length = 4000)
+    private String rsiObservacionesOperador;
+
     @Column(name = "RSI_LATITUD", precision = 18)
     private Double rsiLatitud;
 
