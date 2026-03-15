@@ -60,6 +60,9 @@ public class ImagenStorageServiceImpl implements ImagenStorageService {
 
         log.info("Guardando {} imágenes para acta {}", imagenes.size(), numActa);
 
+        // Limpiar imágenes anteriores para evitar duplicar archivos físicos y registros en BD en caso de reintentos
+        this.eliminarImagenesDeActa(numActa);
+
         List<SiiImagenActaEntity> imagenesGuardadas = new ArrayList<>();
         int contador = 0;
 

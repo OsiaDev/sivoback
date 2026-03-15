@@ -34,6 +34,9 @@ public class InventarioRegistradoStorageServiceImpl implements InventarioRegistr
 
         log.info("Guardando {} inventarios para acta {}", inventarios.size(), numActa);
 
+        // Limpiar inventarios anteriores para evitar duplicidad de colecciones en caso de reintentos
+        this.eliminarInventariosDeActa(numActa);
+
         List<SiiInventarioRegistradoEntity> inventariosGuardados = new ArrayList<>();
         int contador = 0;
 
