@@ -122,13 +122,6 @@ public class UploadActaServiceImpl implements UploadActaService {
                         actaCompleteDTO.getNumActa());
             }
 
-            // Guardar las imágenes del acta
-            if (actaCompleteDTO.getImagenes() != null && !actaCompleteDTO.getImagenes().isEmpty()) {
-                this.guardarImagenes(
-                        actaCompleteDTO.getImagenes(),
-                        autoComisorio,
-                        actaCompleteDTO.getNumActa());
-            }
 
             // Guardar las firmas del acta
             if (actaCompleteDTO.getFirmaActa() != null) {
@@ -465,42 +458,6 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
-    /**
-     * Guarda las imágenes del acta
-     */
-    private void guardarImagenes(List<ImagenDTO> imagenes,
-                                 SiiAutoComisorioEntity autoComisorio,
-                                 Integer numActa) {
-        try {
-            if (imagenes == null || imagenes.isEmpty()) {
-                log.debug("No hay imágenes para guardar en acta {}", numActa);
-                return;
-            }
-
-            log.info("Iniciando guardado de {} imágenes para acta {}", imagenes.size(), numActa);
-
-            // Guardar las imágenes usando el servicio de almacenamiento
-            List<SiiImagenActaEntity> imagenesGuardadas = this.imagenStorageService.guardarImagenes(
-                    imagenes,
-                    autoComisorio,
-                    numActa);
-
-            log.info("Se guardaron exitosamente {}/{} imágenes para acta {}",
-                    imagenesGuardadas.size(), imagenes.size(), numActa);
-
-            // Si no se guardaron todas las imágenes, registrar advertencia
-            if (imagenesGuardadas.size() < imagenes.size()) {
-                log.warn("Solo se guardaron {}/{} imágenes para acta {}. Revisar logs para detalles.",
-                        imagenesGuardadas.size(), imagenes.size(), numActa);
-            }
-
-        } catch (Exception e) {
-            // Log del error, pero no lanzar excepción para no fallar toda la transacción
-            // Las imágenes son importante pero no críticas
-            log.error("Error al guardar imágenes del acta {}: {}. Se continuará con el resto del proceso.",
-                    numActa, e.getMessage(), e);
-        }
-    }
 
     private void guardarFirmasActa(FirmaActaDTO firmaActaDTO,
                                    SiiAutoComisorioEntity autoComisorio,
