@@ -34,6 +34,9 @@ public class NovedadRegistradaStorageServiceImpl implements NovedadRegistradaSto
 
         log.info("Guardando {} novedades para acta {}", novedades.size(), numActa);
 
+        // Limpiar novedades anteriores para evitar duplicidad de colecciones en caso de reintentos
+        this.eliminarNovedadesDeActa(numActa);
+
         List<SiiNovedadRegistradaEntity> novedadesGuardadas = new ArrayList<>();
         int contador = 0;
 

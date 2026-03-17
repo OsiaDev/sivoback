@@ -122,13 +122,6 @@ public class UploadActaServiceImpl implements UploadActaService {
                         actaCompleteDTO.getNumActa());
             }
 
-            // Guardar las imágenes del acta
-            if (actaCompleteDTO.getImagenes() != null && !actaCompleteDTO.getImagenes().isEmpty()) {
-                this.guardarImagenes(
-                        actaCompleteDTO.getImagenes(),
-                        autoComisorio,
-                        actaCompleteDTO.getNumActa());
-            }
 
             // Guardar las firmas del acta
             if (actaCompleteDTO.getFirmaActa() != null) {
@@ -165,6 +158,51 @@ public class UploadActaServiceImpl implements UploadActaService {
             log.error("Error al procesar subida de acta: {}", e.getMessage(), e);
             return ActaSincronizacionResponseDTO.error(
                     "Error al procesar el acta: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public ActaSincronizacionResponseDTO procesarSubidaImagenIndividual(UploadImagenActaDTO dto, Long perCodigo) {
+        try {
+            log.info("Procesando subida de imagen individual para acta número: {}", dto.getNumActa());
+
+            if (dto.getNumActa() == null || dto.getImagen() == null) {
+                log.warn("Datos de acta inválidos o número de acta nulo para la imagen aislada");
+                return ActaSincronizacionResponseDTO.error("Datos inválidos, acta o imagen faltante");
+            }
+
+            // Buscar el auto comisorio por número de acta
+            Optional<SiiAutoComisorioEntity> autoOpt = this.autoComisorioRepository
+                    .findByAucNumero(dto.getNumActa());
+
+            if (autoOpt.isEmpty()) {
+                log.warn("No se encontró el auto comisorio con número: {}", dto.getNumActa());
+                return ActaSincronizacionResponseDTO.error(
+                        "No se encontró el acta con número: " + dto.getNumActa());
+            }
+
+            SiiAutoComisorioEntity autoComisorio = autoOpt.get();
+
+            // Verificar que el auto comisorio pertenezca al fiscalizador
+            if (!perteneceAFiscalizador(autoComisorio, perCodigo)) {
+                log.warn("El fiscalizador {} no tiene permiso para subir imagenes al acta {}",
+                        perCodigo, dto.getNumActa());
+                return ActaSincronizacionResponseDTO.error(
+                        "No tiene permisos para modificar esta acta");
+            }
+
+            // Delegar a ImagenStorageService con la logica Idempotente
+            this.imagenStorageService.guardarImagenIndividual(dto.getImagen(), autoComisorio, dto.getNumActa());
+
+            return ActaSincronizacionResponseDTO.success(
+                    dto.getNumActa(),
+                    "Imagen procesada exitosamente");
+
+        } catch (Exception e) {
+            log.error("Error al procesar subida individual de imagen: {}", e.getMessage(), e);
+            return ActaSincronizacionResponseDTO.error(
+                    "Error al procesar imagen: " + e.getMessage());
         }
     }
 
@@ -420,42 +458,6 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
-    /**
-     * Guarda las imágenes del acta
-     */
-    private void guardarImagenes(List<ImagenDTO> imagenes,
-                                 SiiAutoComisorioEntity autoComisorio,
-                                 Integer numActa) {
-        try {
-            if (imagenes == null || imagenes.isEmpty()) {
-                log.debug("No hay imágenes para guardar en acta {}", numActa);
-                return;
-            }
-
-            log.info("Iniciando guardado de {} imágenes para acta {}", imagenes.size(), numActa);
-
-            // Guardar las imágenes usando el servicio de almacenamiento
-            List<SiiImagenActaEntity> imagenesGuardadas = this.imagenStorageService.guardarImagenes(
-                    imagenes,
-                    autoComisorio,
-                    numActa);
-
-            log.info("Se guardaron exitosamente {}/{} imágenes para acta {}",
-                    imagenesGuardadas.size(), imagenes.size(), numActa);
-
-            // Si no se guardaron todas las imágenes, registrar advertencia
-            if (imagenesGuardadas.size() < imagenes.size()) {
-                log.warn("Solo se guardaron {}/{} imágenes para acta {}. Revisar logs para detalles.",
-                        imagenesGuardadas.size(), imagenes.size(), numActa);
-            }
-
-        } catch (Exception e) {
-            // Log del error, pero no lanzar excepción para no fallar toda la transacción
-            // Las imágenes son importante pero no críticas
-            log.error("Error al guardar imágenes del acta {}: {}. Se continuará con el resto del proceso.",
-                    numActa, e.getMessage(), e);
-        }
-    }
 
     private void guardarFirmasActa(FirmaActaDTO firmaActaDTO,
                                    SiiAutoComisorioEntity autoComisorio,
@@ -508,6 +510,7 @@ public class UploadActaServiceImpl implements UploadActaService {
 
             // Notas del resumen (puede venir null si el DTO es null)
             resumenEntity.setRsiNotasResumen(resumenDTO != null ? resumenDTO.getNotasResumen() : null);
+            resumenEntity.setRsiObservacionesOperador(resumenDTO != null ? resumenDTO.getObservacionesOperador() : null);
 
             // Coordenadas GPS tomadas del raíz del ActaCompleteDTO
             resumenEntity.setRsiLatitud(latitud);

@@ -30,7 +30,7 @@ public class FirmaActaStorageServiceImpl implements FirmaActaStorageService {
     private final FirmaActaRepository firmaActaRepository;
     private final ImagenProcessingService imagenProcessingService;
 
-    @Value("${acta.imagenes.base-path:D:/archivoSiicol}")
+    @Value("${acta.imagenes.base-path:E:/archivoSiicol}")
     private String baseImagePath;
 
     @Value("${acta.imagenes.relative-path:/sivo/actas}")

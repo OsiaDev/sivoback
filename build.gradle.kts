@@ -31,6 +31,10 @@ dependencies {
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.oracle.database.jdbc:ojdbc11")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+	// JasperReports 5.2.0
+	implementation("net.sf.jasperreports:jasperreports:5.2.0")
+
     //runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")

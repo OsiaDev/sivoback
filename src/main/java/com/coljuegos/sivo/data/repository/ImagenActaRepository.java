@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public interface ImagenActaRepository extends JpaRepository<SiiImagenActaEntity, Long> {
 
@@ -14,6 +15,10 @@ public interface ImagenActaRepository extends JpaRepository<SiiImagenActaEntity,
 
     @Query("SELECT img FROM SiiImagenActaEntity img WHERE img.siiAutoComisorio.aucCodigo = :aucCodigo")
     Collection<SiiImagenActaEntity> findByAucCodigo(@Param("aucCodigo") Long aucCodigo);
+
+    @Query("SELECT img FROM SiiImagenActaEntity img WHERE img.imaNumActa = :numActa AND img.imaNombreImagen = :nombreImagen")
+    Optional<SiiImagenActaEntity> findByImaNumActaAndImaNombreImagen(@Param("numActa") Integer numActa,
+            @Param("nombreImagen") String nombreImagen);
 
     @Query("SELECT COUNT(img) FROM SiiImagenActaEntity img WHERE img.imaNumActa = :numActa")
     Long countByNumActa(@Param("numActa") Integer numActa);

@@ -6,5 +6,6 @@ import lombok.Data;
 public class ResumenInventarioDTO {
 
     private String notasResumen;
+    private String observacionesOperador;
 
 }

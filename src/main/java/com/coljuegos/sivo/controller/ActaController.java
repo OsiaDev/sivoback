@@ -4,6 +4,7 @@ import com.coljuegos.sivo.data.dto.ObtenerActaResponseDTO;
 import com.coljuegos.sivo.data.dto.UserDTO;
 import com.coljuegos.sivo.data.dto.acta.ActaCompleteDTO;
 import com.coljuegos.sivo.data.dto.acta.ActaSincronizacionResponseDTO;
+import com.coljuegos.sivo.data.dto.acta.UploadImagenActaDTO;
 import com.coljuegos.sivo.service.acta.ActaService;
 import com.coljuegos.sivo.service.acta.UploadActaService;
 import lombok.AllArgsConstructor;
@@ -48,6 +49,25 @@ public class ActaController {
 
         ActaSincronizacionResponseDTO response = this.uploadActaService.procesarActaSubida(
                 actaCompleteDTO,
+                usuario.getPerCodigo());
+
+        return ResponseEntity.ok().body(response);
+    }
+
+    @PostMapping(path = "uploadImage")
+    public ResponseEntity<ActaSincronizacionResponseDTO> uploadImage(
+            @AuthenticationPrincipal UserDTO usuario,
+            @Validated @RequestBody UploadImagenActaDTO uploadImagenActaDTO) {
+        log.info("ActaController.uploadImage - Usuario: {}, NumActa: {}",
+                usuario != null ? usuario.getUsername() : "null",
+                uploadImagenActaDTO != null ? uploadImagenActaDTO.getNumActa() : "null");
+
+        if (usuario == null) {
+            throw new BadCredentialsException("Error en el token de autenticación aisaldo");
+        }
+
+        ActaSincronizacionResponseDTO response = this.uploadActaService.procesarSubidaImagenIndividual(
+                uploadImagenActaDTO,
                 usuario.getPerCodigo());
 
         return ResponseEntity.ok().body(response);
