@@ -38,7 +38,7 @@ dependencies {
 
 	// JasperReports 5.2.0
 	implementation("net.sf.jasperreports:jasperreports:5.2.0")
-	implementation("org.codehaus.groovy:groovy-all:2.0.1")
+	implementation("org.apache.groovy:groovy-all:3.0.19")
 
     //runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
@@ -51,4 +51,9 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+}
+
+tasks.withType<JavaExec> {
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
