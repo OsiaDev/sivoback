@@ -10,6 +10,7 @@ import com.coljuegos.sivo.service.firma.FirmaActaStorageService;
 import com.coljuegos.sivo.service.imagen.ImagenStorageService;
 import com.coljuegos.sivo.service.inventario.InventarioRegistradoStorageService;
 import com.coljuegos.sivo.service.novedad.NovedadRegistradaStorageService;
+import com.coljuegos.sivo.service.notificacion.ActaNotificacionService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,10 @@ public class UploadActaServiceImpl implements UploadActaService {
     private final FirmaActaStorageService firmaActaStorageService;
 
     private final ResumenInventarioRepository resumenInventarioRepository;
+    private final FirmaActaRepository firmaActaRepository;
+    private final InventarioRegistradoRepository inventarioRegistradoRepository;
+    private final NovedadRegistradaRepository novedadRegistradaRepository;
+    private final ActaNotificacionService actaNotificacionService;
 
     @Override
     @Transactional
@@ -150,14 +155,43 @@ public class UploadActaServiceImpl implements UploadActaService {
             log.info("Acta {} actualizada exitosamente. Estado anterior: {}, Estado nuevo: VISITADO",
                     actaCompleteDTO.getNumActa(), estadoAnterior);
 
+            // 5. Lanzar proceso de reporte y notificación asíncrona
+            this.lanzarNotificacionAsincrona(autoComisorio);
+
             return ActaSincronizacionResponseDTO.success(
                     actaCompleteDTO.getNumActa(),
-                    "Acta procesada exitosamente");
+                    "Acta procesada exitonamente");
 
         } catch (Exception e) {
             log.error("Error al procesar subida de acta: {}", e.getMessage(), e);
             return ActaSincronizacionResponseDTO.error(
                     "Error al procesar el acta: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Prepara y lanza la notificación asíncrona cargando todas las dependencias necesarias.
+     */
+    private void lanzarNotificacionAsincrona(SiiAutoComisorioEntity auto) {
+        try {
+            log.info("[ASYNC-TRIGGER] Preparando disparo de notificación para acta {}", auto.getAucNumero());
+
+            SiiActaVisitaEntity acta = actaVisitaRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
+            SiiVerificacionContractualEntity contractual = verificacionContractualRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
+            SiiVerificacionSiplaftEntity siplaft = verificacionSiplaftRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
+            SiiVerificacionJuegoResponsableEntity juegoResp = verificacionJuegoResponsableRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
+            SiiFirmaActaEntity firma = firmaActaRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
+            
+            List<SiiInventarioRegistradoEntity> inventarios = new java.util.ArrayList<>(inventarioRegistradoRepository.findByAutoComisorioCodigo(auto.getAucCodigo()));
+            List<SiiNovedadRegistradaEntity> novedades = new java.util.ArrayList<>(novedadRegistradaRepository.findByAutoComisorioCodigo(auto.getAucCodigo()));
+
+            actaNotificacionService.notificarActaAsync(
+                    auto, acta, contractual, siplaft, juegoResp, firma, inventarios, novedades
+            );
+
+        } catch (Exception e) {
+            log.error("[ASYNC-TRIGGER] Falló el disparo de la notificación asíncrona para acta {}: {}", 
+                    auto.getAucNumero(), e.getMessage(), e);
         }
     }
 

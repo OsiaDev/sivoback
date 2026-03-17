@@ -40,8 +40,6 @@ public class ActaReporteServiceImpl implements ActaReporteService {
     public byte[] generarReporteActa(ActaReporteContextDTO context) {
         log.info("[REPORTE] Generando PDF en memoria para acta {}", context.getNumActa());
 
-        // Ruta absoluta del .jrxml en el sistema de archivos
-        // Resultado: E:/archivoSiicol/jasperReports/actaVisitaComercial.jrxml
         Path rutaJrxml = Paths.get(basePath, "jasperReports",
                 reporteProperties.getNombreArchivo() + ".jrxml");
 
@@ -54,13 +52,10 @@ public class ActaReporteServiceImpl implements ActaReporteService {
 
         try (InputStream jrxmlStream = new FileInputStream(rutaJrxml.toFile())) {
 
-            // Compilar el .jrxml en memoria
             JasperReport jasperReport = JasperCompileManager.compileReport(jrxmlStream);
 
-            // Construir parámetros
             Map<String, Object> parametros = construirParametros(context);
 
-            // Llenar el reporte (datos van por parámetros y sub-datasources)
             JasperPrint jasperPrint = JasperFillManager.fillReport(
                     jasperReport, parametros, new JREmptyDataSource());
 
@@ -91,15 +86,19 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         }
     }
 
+    /**
+     * Construye el mapa de parámetros Jasper con exactamente los mismos nombres de clave
+     * que usa {@code ResultadoVisitaMB.imprimir()} en el sistema legacy.
+     */
     private Map<String, Object> construirParametros(ActaReporteContextDTO ctx) {
         Map<String, Object> p = new HashMap<>();
 
-        // El parámetro "path" apunta al mismo directorio del .jrxml
-        // (el legacy lo usaba para sub-reportes relativos)
-        Path rutaJrxml = Paths.get(basePath, "jasperReports");
-        p.put("path", rutaJrxml.toAbsolutePath());
+        // Rutas de recursos — igual que el legacy
+        Path dirJasper = Paths.get(basePath, "jasperReports");
+        p.put("path", dirJasper.toAbsolutePath());
         p.put("pathImagen", basePath + FileSystems.getDefault().getSeparator());
 
+        // ── Datos generales del acta ────────────────────────────────────────────
         p.put("fechaInventario", ctx.getFechaInventario());
         p.put("actaNumero", ctx.getActaNumero());
         p.put("autoNumero", ctx.getAutoNumero());
@@ -116,9 +115,12 @@ public class ActaReporteServiceImpl implements ActaReporteService {
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         }
 
+        // ── Datos de la visita ──────────────────────────────────────────────────
+        // Legacy descompone la fecha en hora, día, mes y año por separado
         if (ctx.getFechaHoraVisita() != null) {
-            p.put("horaVisita", ctx.getFechaHoraVisita().getHour() + ":"
-                    + String.format("%02d", ctx.getFechaHoraVisita().getMinute()));
+            int hora = ctx.getFechaHoraVisita().getHour();
+            int min = ctx.getFechaHoraVisita().getMinute();
+            p.put("horaVisita", hora + ":" + String.format("%02d", min));
             p.put("diaVisita", ctx.getFechaHoraVisita().getDayOfMonth());
             p.put("mesVisita", obtenerNombreMes(ctx.getFechaHoraVisita().getMonthValue()));
             p.put("anoVisita", ctx.getFechaHoraVisita().getYear());
@@ -128,18 +130,21 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("municipioPresente", ctx.getMunicipioPresente());
         p.put("cargoPresente", ctx.getCargoPresente());
 
+        // ── Fecha del auto comisorio ────────────────────────────────────────────
         if (ctx.getFechaAuto() != null) {
             p.put("fechaAuto", ctx.getFechaAuto()
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         }
 
+        // ── Verificación contractual ────────────────────────────────────────────
         p.put("avisoAutorizacion", ctx.getAvisoAutorizacion());
         p.put("direccionCorresponde", ctx.getDireccionCorresponde());
-        p.put("direccionCorrecta", ctx.getOtraDireccion());
+        p.put("direccionCorrecta", ctx.getOtraDireccion());          // "Otra dirección"
         p.put("nombreCorresponde", ctx.getNombreEstCorresponde());
-        p.put("nombreCorrecto", ctx.getOtroNombre());
+        p.put("nombreCorrecto", ctx.getOtroNombre());                // "Otro nombre"
         p.put("actividadDiferente", ctx.getActividadesDiferentes());
 
+        // Legacy: si tipoActividad == "Otros" se muestra especificacionOtros
         String actividad = ctx.getTipoActividad();
         if ("Otros".equalsIgnoreCase(actividad)) {
             actividad = ctx.getEspecificacionOtros();
@@ -147,25 +152,31 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("actividad", actividad);
         p.put("cuentaRegistros", ctx.getRegistrosMantenimiento());
 
+        // ── Verificación SIPLAFT ────────────────────────────────────────────────
         p.put("formatoIdentificacion", ctx.getFormatoIdentificacion());
         p.put("monto", ctx.getMontoIdentificacion());
         p.put("formatoReporteInterno", ctx.getFormatoReporteInterno());
         p.put("senalesAlerta", ctx.getSenalesAlerta());
         p.put("codigoConducta", ctx.getConoceCodigoConducta());
 
+        // ── Firmas ──────────────────────────────────────────────────────────────
+        // Nombres de parámetros Jasper idénticos al legacy ResultadoVisitaMB.imprimir()
         p.put("nombreFiscalizador", ctx.getNombreFiscalizador());
         p.put("ccFiscalizador", ctx.getCcFiscalizador());
         p.put("cargoFiscalizador", ctx.getCargoFiscalizador());
+        p.put("firmaFiscalizador", ctx.getFirmaFiscalizadorPath());        // path en disco
+
         p.put("nombreAcompanante", ctx.getNombreAcompanante());
         p.put("ccAcompanante", ctx.getCcAcompanante());
         p.put("cargoAcompanante", ctx.getCargoAcompanante());
+        p.put("firmaAcompanante", ctx.getFirmaAcompanantePath());          // path en disco
+
         p.put("nombreFirmaOperador", ctx.getNombreFirmaOperador());
         p.put("ccFirmaOperador", ctx.getCcFirmaOperador());
         p.put("rolFirmaOperador", ctx.getRolFirmaOperador());
-        p.put("firmaFiscalizador", ctx.getFirmaFiscalizadorPath());
-        p.put("firmaAcompanante", ctx.getFirmaAcompanantePath());
-        p.put("firmaOperador", ctx.getFirmaOperadorPath());
+        p.put("firmaOperador", ctx.getFirmaOperadorPath());                // path en disco
 
+        // ── Sub-reportes ────────────────────────────────────────────────────────
         p.put("listaInventario", new JRBeanCollectionDataSource(
                 ctx.getListaInventarios() != null ? ctx.getListaInventarios() : Collections.emptyList()));
         p.put("listaNovedad", new JRBeanCollectionDataSource(
