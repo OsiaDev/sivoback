@@ -31,6 +31,7 @@ dependencies {
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.oracle.database.jdbc:ojdbc11")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.springframework.boot:spring-boot-starter-mail")
 
 	// JasperReports 5.2.0
 	implementation("net.sf.jasperreports:jasperreports:5.2.0")
