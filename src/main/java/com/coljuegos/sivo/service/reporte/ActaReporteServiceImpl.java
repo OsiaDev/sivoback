@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.util.JRLoader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +42,7 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         log.info("[REPORTE] Generando PDF en memoria para acta {}", context.getNumActa());
 
         Path rutaJrxml = Paths.get(basePath, "jasperReports",
-                reporteProperties.getNombreArchivo() + ".jrxml");
+                reporteProperties.getNombreArchivo() + ".jasper");
 
         log.debug("[REPORTE] Cargando plantilla desde: {}", rutaJrxml.toAbsolutePath());
 
@@ -52,7 +53,7 @@ public class ActaReporteServiceImpl implements ActaReporteService {
 
         try (InputStream jrxmlStream = new FileInputStream(rutaJrxml.toFile())) {
 
-            JasperReport jasperReport = JasperCompileManager.compileReport(jrxmlStream);
+            JasperReport jasperReport = (JasperReport) JRLoader.loadObject(jrxmlStream);
 
             Map<String, Object> parametros = construirParametros(context);
 
