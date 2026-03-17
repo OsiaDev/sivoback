@@ -38,6 +38,7 @@ dependencies {
 
 	// JasperReports 5.2.0
 	implementation("net.sf.jasperreports:jasperreports:5.2.0")
+	implementation("org.codehaus.groovy:groovy-all:2.0.1")
 
     //runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
