@@ -176,6 +176,10 @@ public class UploadActaServiceImpl implements UploadActaService {
         try {
             log.info("[ASYNC-TRIGGER] Preparando disparo de notificación para acta {}", auto.getAucNumero());
 
+            // Recargar el auto comisorio con todas sus asociaciones para evitar LazyInitializationException en el hilo async
+            auto = autoComisorioRepository.findByAucNumeroWithCollections(auto.getAucNumero())
+                    .orElse(auto);
+
             SiiActaVisitaEntity acta = actaVisitaRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
             SiiVerificacionContractualEntity contractual = verificacionContractualRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
             SiiVerificacionSiplaftEntity siplaft = verificacionSiplaftRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);

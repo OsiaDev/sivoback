@@ -34,4 +34,14 @@ public interface AutoComisorioRepository extends JpaRepository<SiiAutoComisorioE
     @Query("SELECT ac FROM SiiAutoComisorioEntity ac WHERE ac.aucNumero = :aucNumero")
     Optional<SiiAutoComisorioEntity> findByAucNumero(@Param("aucNumero") Integer aucNumero);
 
+    @Query("SELECT ac FROM SiiAutoComisorioEntity ac " +
+            "LEFT JOIN FETCH ac.siiContrato con " +
+            "LEFT JOIN FETCH con.siiOperadorEntity ope " +
+            "LEFT JOIN FETCH ope.siiPersona per " +
+            "LEFT JOIN FETCH ac.siiEstablecimiento est " +
+            "LEFT JOIN FETCH est.siiUbicacion ubi " +
+            "LEFT JOIN FETCH ubi.siiUbicacionPadre " +
+            "WHERE ac.aucNumero = :aucNumero")
+    Optional<SiiAutoComisorioEntity> findByAucNumeroWithCollections(@Param("aucNumero") Integer aucNumero);
+
 }
