@@ -45,9 +45,6 @@ public class UploadActaServiceImpl implements UploadActaService {
     private final FirmaActaStorageService firmaActaStorageService;
 
     private final ResumenInventarioRepository resumenInventarioRepository;
-    private final FirmaActaRepository firmaActaRepository;
-    private final InventarioRegistradoRepository inventarioRegistradoRepository;
-    private final NovedadRegistradaRepository novedadRegistradaRepository;
     private final ActaNotificacionService actaNotificacionService;
 
     @Override
