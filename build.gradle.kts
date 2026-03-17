@@ -21,6 +21,9 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven {
+		url = uri("https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts/")
+	}
 }
 
 dependencies {
@@ -35,6 +38,11 @@ dependencies {
 
 	// JasperReports 5.2.0
 	implementation("net.sf.jasperreports:jasperreports:5.2.0")
+	// Groovy 3.0.19 para compatibilidad con Java 17
+	implementation("org.codehaus.groovy:groovy:3.0.19")
+	implementation("org.codehaus.groovy:groovy-jsr223:3.0.19")
+	implementation("org.codehaus.groovy:groovy-json:3.0.19")
+	implementation("org.codehaus.groovy:groovy-xml:3.0.19")
 
     //runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
@@ -47,4 +55,9 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+}
+
+tasks.withType<JavaExec> {
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }

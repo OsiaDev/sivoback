@@ -29,6 +29,9 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
     private final ActaReporteContextMapper actaReporteContextMapper;
     private final JavaMailSender mailSender;
 
+    @org.springframework.beans.factory.annotation.Value("${acta.notificacion.remitente:no-reply@coljuegos.gov.co}")
+    private String remitente;
+
     private static final String EMAIL_PATTERN = "[\\w\\.-]*[a-zA-Z0-9_]@[\\w\\.-]*[a-zA-Z0-9]\\.[a-zA-Z][a-zA-Z\\.]*[a-zA-Z]";
 
     @Override
@@ -124,6 +127,7 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(destinatarios.toArray(new String[0]));
+            helper.setFrom(remitente);
             helper.setSubject("Acta de Visita de Fiscalización No. " + numActa);
             
             String htmlContent = "<h3>Notificación de Acta de Visita</h3>" +

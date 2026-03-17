@@ -81,7 +81,7 @@ acta:
     extension: pdf
   notificacion:
     asunto: "Coljuegos - Acta de Visita"
-    remitente: no-reply@coljuegos.gov.co
+    remitente: ${MAIL_SENDER:no-reply@coljuegos.gov.co}
 
 jwt:
   secret: e3pLV3tPUUg3KiI1OFYkYj04Sn1pQl5IeTgteWdXRyhfeWU1TmU2UmNMZSM0YFM/VEtNey84TD9NPUs0dFpF
