@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,14 +81,23 @@ public class UploadActaServiceImpl implements UploadActaService {
                         "No tiene permisos para modificar esta acta");
             }
 
+            // --- RECOPILACION DE ENTIDADES PARA NOTIFICACION ASINCRONA ---
+            SiiActaVisitaEntity entidadActa = null;
+            SiiVerificacionContractualEntity entidadContractual = null;
+            SiiVerificacionSiplaftEntity entidadSiplaft = null;
+            SiiVerificacionJuegoResponsableEntity entidadJuegoResp = null;
+            SiiFirmaActaEntity entidadFirma = null;
+            List<SiiInventarioRegistradoEntity> listaInventarios = Collections.emptyList();
+            List<SiiNovedadRegistradaEntity> listaNovedades = Collections.emptyList();
+
             // Guardar la información de ActaVisitaDTO
             if (actaCompleteDTO.getActaVisita() != null) {
-                this.guardarActaVisita(actaCompleteDTO.getActaVisita(), autoComisorio, actaCompleteDTO.getNumActa());
+                entidadActa = this.guardarActaVisita(actaCompleteDTO.getActaVisita(), autoComisorio, actaCompleteDTO.getNumActa());
             }
 
             // Guardar la información de VerificacionContractualDTO
             if (actaCompleteDTO.getVerificacionContractual() != null) {
-                this.guardarVerificacionContractual(
+                entidadContractual = this.guardarVerificacionContractual(
                         actaCompleteDTO.getVerificacionContractual(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
@@ -95,7 +105,7 @@ public class UploadActaServiceImpl implements UploadActaService {
 
             // Guardar la información de VerificacionSiplaftDTO
             if (actaCompleteDTO.getVerificacionSiplaft() != null) {
-                this.guardarVerificacionSiplaft(
+                entidadSiplaft = this.guardarVerificacionSiplaft(
                         actaCompleteDTO.getVerificacionSiplaft(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
@@ -103,7 +113,7 @@ public class UploadActaServiceImpl implements UploadActaService {
 
             // Guardar la información de VerificacionJuegoResponsableDTO
             if (actaCompleteDTO.getVerificacionJuegoResponsable() != null) {
-                this.guardarVerificacionJuegoResponsable(
+                entidadJuegoResp = this.guardarVerificacionJuegoResponsable(
                         actaCompleteDTO.getVerificacionJuegoResponsable(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
@@ -112,7 +122,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             // Guardar inventarios registrados
             if (actaCompleteDTO.getInventariosRegistrados() != null
                     && !actaCompleteDTO.getInventariosRegistrados().isEmpty()) {
-                this.guardarInventarios(
+                listaInventarios = this.guardarInventarios(
                         actaCompleteDTO.getInventariosRegistrados(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
@@ -121,7 +131,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             // Guardar novedades registradas
             if (actaCompleteDTO.getNovedadesRegistradas() != null
                     && !actaCompleteDTO.getNovedadesRegistradas().isEmpty()) {
-                this.guardarNovedades(
+                listaNovedades = this.guardarNovedades(
                         actaCompleteDTO.getNovedadesRegistradas(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
@@ -130,7 +140,7 @@ public class UploadActaServiceImpl implements UploadActaService {
 
             // Guardar las firmas del acta
             if (actaCompleteDTO.getFirmaActa() != null) {
-                this.guardarFirmasActa(
+                entidadFirma = this.guardarFirmasActa(
                         actaCompleteDTO.getFirmaActa(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
@@ -156,7 +166,10 @@ public class UploadActaServiceImpl implements UploadActaService {
                     actaCompleteDTO.getNumActa(), estadoAnterior);
 
             // 5. Lanzar proceso de reporte y notificación asíncrona
-            this.lanzarNotificacionAsincrona(autoComisorio);
+            // PASAMOS TODAS LAS ENTIDADES DIRECTAMENTE PARA EVITAR HANGS POR RE-QUERY
+            this.lanzarNotificacionAsincronaDirecto(
+                    autoComisorio, entidadActa, entidadContractual, entidadSiplaft, 
+                    entidadJuegoResp, entidadFirma, listaInventarios, listaNovedades);
 
             return ActaSincronizacionResponseDTO.success(
                     actaCompleteDTO.getNumActa(),
@@ -170,24 +183,24 @@ public class UploadActaServiceImpl implements UploadActaService {
     }
 
     /**
-     * Prepara y lanza la notificación asíncrona cargando todas las dependencias necesarias.
+     * Prepara y lanza la notificación asíncrona usando las entidades ya cargadas en memoria.
      */
-    private void lanzarNotificacionAsincrona(SiiAutoComisorioEntity auto) {
+    private void lanzarNotificacionAsincronaDirecto(
+            SiiAutoComisorioEntity auto,
+            SiiActaVisitaEntity acta,
+            SiiVerificacionContractualEntity contractual,
+            SiiVerificacionSiplaftEntity siplaft,
+            SiiVerificacionJuegoResponsableEntity juegoResp,
+            SiiFirmaActaEntity firma,
+            List<SiiInventarioRegistradoEntity> inventarios,
+            List<SiiNovedadRegistradaEntity> novedades) {
+        
         try {
-            log.info("[ASYNC-TRIGGER] Preparando disparo de notificación para acta {}", auto.getAucNumero());
+            log.info("[ASYNC-TRIGGER] Disparando notificación directa para acta {} (Sin consultas extras)", auto.getAucNumero());
 
-            // Inicializar asociaciones manualmente mientras estamos en la transacción
-            // para evitar LazyInitializationException en el hilo async sin usar queries pesados.
+            // Inicializar asociaciones de carga perezosa que NO están en las entidades de arriba
+            // (Como Operador, Persona, etc. que cuelgan del AutoComisorio)
             this.inicializarAsociaciones(auto);
-
-            SiiActaVisitaEntity acta = actaVisitaRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
-            SiiVerificacionContractualEntity contractual = verificacionContractualRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
-            SiiVerificacionSiplaftEntity siplaft = verificacionSiplaftRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
-            SiiVerificacionJuegoResponsableEntity juegoResp = verificacionJuegoResponsableRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
-            SiiFirmaActaEntity firma = firmaActaRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
-            
-            List<SiiInventarioRegistradoEntity> inventarios = new java.util.ArrayList<>(inventarioRegistradoRepository.findByAutoComisorioCodigo(auto.getAucCodigo()));
-            List<SiiNovedadRegistradaEntity> novedades = new java.util.ArrayList<>(novedadRegistradaRepository.findByAutoComisorioCodigo(auto.getAucCodigo()));
 
             actaNotificacionService.notificarActaAsync(
                     auto, acta, contractual, siplaft, juegoResp, firma, inventarios, novedades
@@ -288,7 +301,7 @@ public class UploadActaServiceImpl implements UploadActaService {
                 perCodigo.equals(grupo.getFsuCodigoAcomp().getSiiPersona().getPerCodigo());
     }
 
-    private void guardarActaVisita(ActaVisitaDTO actaVisitaDTO, SiiAutoComisorioEntity autoComisorio, Integer numActa) {
+    private SiiActaVisitaEntity guardarActaVisita(ActaVisitaDTO actaVisitaDTO, SiiAutoComisorioEntity autoComisorio, Integer numActa) {
         try {
             log.info("Guardando información de ActaVisita para acta número: {}", numActa);
 
@@ -320,10 +333,11 @@ public class UploadActaServiceImpl implements UploadActaService {
             actaVisitaEntity.setAviCorreosContacto(actaVisitaDTO.getCorreosContacto());
 
             // Guardar en la base de datos
-            this.actaVisitaRepository.save(actaVisitaEntity);
+            SiiActaVisitaEntity guardado = this.actaVisitaRepository.save(actaVisitaEntity);
 
             log.info("ActaVisita guardada exitosamente para acta: {}, código: {}",
-                    numActa, actaVisitaEntity.getAviCodigo());
+                    numActa, guardado.getAviCodigo());
+            return guardado;
 
         } catch (Exception e) {
             log.error("Error al guardar ActaVisita para acta {}: {}", numActa, e.getMessage(), e);
@@ -331,7 +345,7 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
-    private void guardarVerificacionContractual(VerificacionContractualDTO verificacionDTO,
+    private SiiVerificacionContractualEntity guardarVerificacionContractual(VerificacionContractualDTO verificacionDTO,
                                                 SiiAutoComisorioEntity autoComisorio,
                                                 Integer numActa) {
         try {
@@ -368,10 +382,11 @@ public class UploadActaServiceImpl implements UploadActaService {
             verificacionEntity.setVcoRegistrosMantenimiento(verificacionDTO.getCuentaRegistrosMantenimiento());
 
             // Guardar en la base de datos
-            this.verificacionContractualRepository.save(verificacionEntity);
+            SiiVerificacionContractualEntity guardado = this.verificacionContractualRepository.save(verificacionEntity);
 
             log.info("VerificacionContractual guardada exitosamente para acta: {}, código: {}",
-                    numActa, verificacionEntity.getVcoCodigo());
+                    numActa, guardado.getVcoCodigo());
+            return guardado;
 
         } catch (Exception e) {
             log.error("Error al guardar VerificacionContractual para acta {}: {}", numActa, e.getMessage(), e);
@@ -379,7 +394,7 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
-    private void guardarVerificacionSiplaft(VerificacionSiplaftDTO verificacionDTO,
+    private SiiVerificacionSiplaftEntity guardarVerificacionSiplaft(VerificacionSiplaftDTO verificacionDTO,
                                             SiiAutoComisorioEntity autoComisorio,
                                             Integer numActa) {
         try {
@@ -412,10 +427,11 @@ public class UploadActaServiceImpl implements UploadActaService {
             verificacionEntity.setVsiConoceCodigoConducta(verificacionDTO.getConoceCodigoConducta());
 
             // Guardar en la base de datos
-            this.verificacionSiplaftRepository.save(verificacionEntity);
+            SiiVerificacionSiplaftEntity guardado = this.verificacionSiplaftRepository.save(verificacionEntity);
 
             log.info("VerificacionSiplaft guardada exitosamente para acta: {}, código: {}",
-                    numActa, verificacionEntity.getVsiCodigo());
+                    numActa, guardado.getVsiCodigo());
+            return guardado;
 
         } catch (Exception e) {
             log.error("Error al guardar VerificacionSiplaft para acta {}: {}", numActa, e.getMessage(), e);
@@ -423,7 +439,7 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
-    private void guardarVerificacionJuegoResponsable(VerificacionJuegoResponsableDTO verificacionDTO,
+    private SiiVerificacionJuegoResponsableEntity guardarVerificacionJuegoResponsable(VerificacionJuegoResponsableDTO verificacionDTO,
                                                      SiiAutoComisorioEntity autoComisorio,
                                                      Integer numActa) {
         try {
@@ -449,10 +465,11 @@ public class UploadActaServiceImpl implements UploadActaService {
             verificacionEntity.setVjrExistenPiezasPublicitarias(verificacionDTO.getExistenPiezasPublicitarias());
             verificacionEntity.setVjrCuentaProgramaJuegoResp(verificacionDTO.getCuentaProgramaJuegoResponsable());
 
-            this.verificacionJuegoResponsableRepository.save(verificacionEntity);
+            SiiVerificacionJuegoResponsableEntity guardado = this.verificacionJuegoResponsableRepository.save(verificacionEntity);
 
             log.info("VerificacionJuegoResponsable guardada exitosamente para acta: {}, código: {}",
-                    numActa, verificacionEntity.getVjrCodigo());
+                    numActa, guardado.getVjrCodigo());
+            return guardado;
 
         } catch (Exception e) {
             log.error("Error al guardar VerificacionJuegoResponsable para acta {}: {}", numActa, e.getMessage(), e);
@@ -460,18 +477,18 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
-    private void guardarInventarios(List<InventarioRegistradoDTO> inventarios,
+    private List<SiiInventarioRegistradoEntity> guardarInventarios(List<InventarioRegistradoDTO> inventarios,
                                     SiiAutoComisorioEntity autoComisorio,
                                     Integer numActa) {
         try {
             if (inventarios == null || inventarios.isEmpty()) {
                 log.debug("No hay inventarios para guardar en acta {}", numActa);
-                return;
+                return Collections.emptyList();
             }
 
             log.info("Iniciando guardado de {} inventarios para acta {}", inventarios.size(), numActa);
 
-            List<?> inventariosGuardados = this.inventarioRegistradoStorageService.guardarInventarios(
+            List<SiiInventarioRegistradoEntity> inventariosGuardados = this.inventarioRegistradoStorageService.guardarInventarios(
                     inventarios,
                     autoComisorio,
                     numActa);
@@ -479,29 +496,27 @@ public class UploadActaServiceImpl implements UploadActaService {
             log.info("Se guardaron exitosamente {}/{} inventarios para acta {}",
                     inventariosGuardados.size(), inventarios.size(), numActa);
 
-            if (inventariosGuardados.size() < inventarios.size()) {
-                log.warn("Solo se guardaron {}/{} inventarios para acta {}. Revisar logs para detalles.",
-                        inventariosGuardados.size(), inventarios.size(), numActa);
-            }
+            return inventariosGuardados;
 
         } catch (Exception e) {
             log.error("Error al guardar inventarios del acta {}: {}. Se continuará con el resto del proceso.",
                     numActa, e.getMessage(), e);
+            return Collections.emptyList();
         }
     }
 
-    private void guardarNovedades(List<NovedadRegistradaDTO> novedades,
+    private List<SiiNovedadRegistradaEntity> guardarNovedades(List<NovedadRegistradaDTO> novedades,
                                   SiiAutoComisorioEntity autoComisorio,
                                   Integer numActa) {
         try {
             if (novedades == null || novedades.isEmpty()) {
                 log.debug("No hay novedades para guardar en acta {}", numActa);
-                return;
+                return Collections.emptyList();
             }
 
             log.info("Iniciando guardado de {} novedades para acta {}", novedades.size(), numActa);
 
-            List<?> novedadesGuardadas = this.novedadRegistradaStorageService.guardarNovedades(
+            List<SiiNovedadRegistradaEntity> novedadesGuardadas = this.novedadRegistradaStorageService.guardarNovedades(
                     novedades,
                     autoComisorio,
                     numActa);
@@ -509,25 +524,23 @@ public class UploadActaServiceImpl implements UploadActaService {
             log.info("Se guardaron exitosamente {}/{} novedades para acta {}",
                     novedadesGuardadas.size(), novedades.size(), numActa);
 
-            if (novedadesGuardadas.size() < novedades.size()) {
-                log.warn("Solo se guardaron {}/{} novedades para acta {}. Revisar logs para detalles.",
-                        novedadesGuardadas.size(), novedades.size(), numActa);
-            }
+            return novedadesGuardadas;
 
         } catch (Exception e) {
             log.error("Error al guardar novedades del acta {}: {}. Se continuará con el resto del proceso.",
                     numActa, e.getMessage(), e);
+            return Collections.emptyList();
         }
     }
 
 
-    private void guardarFirmasActa(FirmaActaDTO firmaActaDTO,
+    private SiiFirmaActaEntity guardarFirmasActa(FirmaActaDTO firmaActaDTO,
                                    SiiAutoComisorioEntity autoComisorio,
                                    Integer numActa) {
         try {
             if (firmaActaDTO == null) {
                 log.debug("No hay firmas para guardar en acta {}", numActa);
-                return;
+                return null;
             }
 
             log.info("Iniciando guardado de firmas para acta {}", numActa);
@@ -539,10 +552,12 @@ public class UploadActaServiceImpl implements UploadActaService {
 
             log.info("Firmas guardadas exitosamente para acta {}, código: {}",
                     numActa, firmaGuardada.getFiaCodigo());
+            return firmaGuardada;
 
         } catch (Exception e) {
             log.error("Error al guardar firmas del acta {}: {}. Se continuará con el resto del proceso.",
                     numActa, e.getMessage(), e);
+            return null;
         }
     }
 
