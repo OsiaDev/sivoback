@@ -176,9 +176,9 @@ public class UploadActaServiceImpl implements UploadActaService {
         try {
             log.info("[ASYNC-TRIGGER] Preparando disparo de notificación para acta {}", auto.getAucNumero());
 
-            // Recargar el auto comisorio con todas sus asociaciones para evitar LazyInitializationException en el hilo async
-            auto = autoComisorioRepository.findByAucNumeroWithCollections(auto.getAucNumero())
-                    .orElse(auto);
+            // Inicializar asociaciones manualmente mientras estamos en la transacción
+            // para evitar LazyInitializationException en el hilo async sin usar queries pesados.
+            this.inicializarAsociaciones(auto);
 
             SiiActaVisitaEntity acta = actaVisitaRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
             SiiVerificacionContractualEntity contractual = verificacionContractualRepository.findByAutoComisorioCodigo(auto.getAucCodigo()).orElse(null);
@@ -196,6 +196,30 @@ public class UploadActaServiceImpl implements UploadActaService {
         } catch (Exception e) {
             log.error("[ASYNC-TRIGGER] Falló el disparo de la notificación asíncrona para acta {}: {}", 
                     auto.getAucNumero(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * "Toca" las asociaciones de carga perezosa para inicializarlas dentro de la sesión actual (Hibernate).
+     */
+    private void inicializarAsociaciones(SiiAutoComisorioEntity auto) {
+        if (auto.getSiiContrato() != null) {
+            auto.getSiiContrato().getConNumero(); // Touch proxy
+            if (auto.getSiiContrato().getSiiOperadorEntity() != null) {
+                auto.getSiiContrato().getSiiOperadorEntity().getOpeCodigo(); // Touch proxy
+                if (auto.getSiiContrato().getSiiOperadorEntity().getSiiPersona() != null) {
+                    auto.getSiiContrato().getSiiOperadorEntity().getSiiPersona().getPerNumIdentificacion(); // Touch proxy
+                }
+            }
+        }
+        if (auto.getSiiEstablecimiento() != null) {
+            auto.getSiiEstablecimiento().getEstNombre(); // Touch proxy
+            if (auto.getSiiEstablecimiento().getSiiUbicacion() != null) {
+                auto.getSiiEstablecimiento().getSiiUbicacion().getUbiNombre(); // Touch proxy
+                if (auto.getSiiEstablecimiento().getSiiUbicacion().getSiiUbicacionPadre() != null) {
+                    auto.getSiiEstablecimiento().getSiiUbicacion().getSiiUbicacionPadre().getUbiNombre(); // Touch proxy
+                }
+            }
         }
     }
 
