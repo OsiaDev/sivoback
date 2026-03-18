@@ -45,6 +45,15 @@ public class SiiNovedadRegistradaEntity implements Serializable {
     @Column(name = "NOR_TIENE_PLACA")
     private Integer norTienePlaca; // Oracle: 1=true, 0=false, null=no especificado
 
+    @Column(name = "NOR_DESCRIPCION_JUEGO")
+    private Integer norDescripcionJuego;
+
+    @Column(name = "NOR_PLAN_PREMIOS")
+    private Integer norPlanPremios;
+
+    @Column(name = "NOR_VALOR_PREMIOS")
+    private Integer norValorPremios;
+
     @Column(name = "NOR_OPERANDO", length = 2)
     private String norOperando;
 
