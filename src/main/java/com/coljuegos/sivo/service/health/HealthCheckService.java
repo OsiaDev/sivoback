@@ -1,0 +1,115 @@
+package com.coljuegos.sivo.service.health;
+
+import com.coljuegos.sivo.data.repository.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+public class HealthCheckService {
+
+    private final ActaVisitaRepository actaVisitaRepository;
+    private final FirmaActaRepository firmaActaRepository;
+    private final ImagenActaRepository imagenActaRepository;
+    private final InventarioRegistradoRepository inventarioRegistradoRepository;
+    private final NovedadRegistradaRepository novedadRegistradaRepository;
+    private final ResumenInventarioRepository resumenInventarioRepository;
+    private final VerificacionContractualRepository verificacionContractualRepository;
+    private final VerificacionJuegoResponsableRepository verificacionJuegoResponsableRepository;
+    private final VerificacionSiplaftRepository verificacionSiplaftRepository;
+
+    @Value("${acta.imagenes.base-path}")
+    private String basePath;
+
+    @Value("${acta.imagenes.relative-path}")
+    private String relativePath;
+
+    public HealthCheckService(ActaVisitaRepository actaVisitaRepository,
+            FirmaActaRepository firmaActaRepository,
+            ImagenActaRepository imagenActaRepository,
+            InventarioRegistradoRepository inventarioRegistradoRepository,
+            NovedadRegistradaRepository novedadRegistradaRepository,
+            ResumenInventarioRepository resumenInventarioRepository,
+            VerificacionContractualRepository verificacionContractualRepository,
+            VerificacionJuegoResponsableRepository verificacionJuegoResponsableRepository,
+            VerificacionSiplaftRepository verificacionSiplaftRepository) {
+        this.actaVisitaRepository = actaVisitaRepository;
+        this.firmaActaRepository = firmaActaRepository;
+        this.imagenActaRepository = imagenActaRepository;
+        this.inventarioRegistradoRepository = inventarioRegistradoRepository;
+        this.novedadRegistradaRepository = novedadRegistradaRepository;
+        this.resumenInventarioRepository = resumenInventarioRepository;
+        this.verificacionContractualRepository = verificacionContractualRepository;
+        this.verificacionJuegoResponsableRepository = verificacionJuegoResponsableRepository;
+        this.verificacionSiplaftRepository = verificacionSiplaftRepository;
+    }
+
+    public Map<String, Object> checkHealth() {
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("database", checkDatabase());
+        response.put("fileSystem", checkFileSystem());
+
+        return response;
+    }
+
+    private Map<String, String> checkDatabase() {
+        Map<String, String> dbStatus = new HashMap<>();
+
+        dbStatus.put("SiiActaVisitaEntity", checkRepository(() -> actaVisitaRepository.count()));
+        dbStatus.put("SiiFirmaActaEntity", checkRepository(() -> firmaActaRepository.count()));
+        dbStatus.put("SiiImagenActaEntity", checkRepository(() -> imagenActaRepository.count()));
+        dbStatus.put("SiiInventarioRegistradoEntity", checkRepository(() -> inventarioRegistradoRepository.count()));
+        dbStatus.put("SiiNovedadRegistradaEntity", checkRepository(() -> novedadRegistradaRepository.count()));
+        dbStatus.put("SiiResumenInventarioEntity", checkRepository(() -> resumenInventarioRepository.count()));
+        dbStatus.put("SiiVerificacionContractualEntity",
+                checkRepository(() -> verificacionContractualRepository.count()));
+        dbStatus.put("SiiVerificacionJuegoResponsableEntity",
+                checkRepository(() -> verificacionJuegoResponsableRepository.count()));
+        dbStatus.put("SiiVerificacionSiplaftEntity", checkRepository(() -> verificacionSiplaftRepository.count()));
+
+        return dbStatus;
+    }
+
+    private String checkRepository(Runnable method) {
+        try {
+            method.run();
+            return "OK";
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
+
+    private Map<String, String> checkFileSystem() {
+        Map<String, String> fsStatus = new HashMap<>();
+
+        try {
+            String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            String fullPathString = basePath + relativePath + "/" + datePath + "/test/";
+            Path dirPath = Paths.get(fullPathString);
+
+            fsStatus.put("path", dirPath.toString());
+
+            if (!Files.exists(dirPath)) {
+                Files.createDirectories(dirPath);
+            }
+
+            Path filePath = dirPath.resolve("text.txt");
+            Files.writeString(filePath, "text");
+
+            fsStatus.put("status", "OK");
+        } catch (Exception e) {
+            fsStatus.put("status", "Error: " + e.getMessage());
+        }
+
+        return fsStatus;
+    }
+
+}
