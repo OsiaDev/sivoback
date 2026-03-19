@@ -3,6 +3,8 @@ package com.coljuegos.sivo.service.health;
 import com.coljuegos.sivo.data.repository.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +26,7 @@ public class HealthCheckService {
     private final VerificacionContractualRepository verificacionContractualRepository;
     private final VerificacionJuegoResponsableRepository verificacionJuegoResponsableRepository;
     private final VerificacionSiplaftRepository verificacionSiplaftRepository;
+    private final JavaMailSender javaMailSender;
 
     @Value("${acta.imagenes.base-path}")
     private String basePath;
@@ -45,7 +48,8 @@ public class HealthCheckService {
             ResumenInventarioRepository resumenInventarioRepository,
             VerificacionContractualRepository verificacionContractualRepository,
             VerificacionJuegoResponsableRepository verificacionJuegoResponsableRepository,
-            VerificacionSiplaftRepository verificacionSiplaftRepository) {
+            VerificacionSiplaftRepository verificacionSiplaftRepository,
+            JavaMailSender javaMailSender) {
         this.actaVisitaRepository = actaVisitaRepository;
         this.firmaActaRepository = firmaActaRepository;
         this.imagenActaRepository = imagenActaRepository;
@@ -55,6 +59,7 @@ public class HealthCheckService {
         this.verificacionContractualRepository = verificacionContractualRepository;
         this.verificacionJuegoResponsableRepository = verificacionJuegoResponsableRepository;
         this.verificacionSiplaftRepository = verificacionSiplaftRepository;
+        this.javaMailSender = javaMailSender;
     }
 
     public Map<String, Object> checkHealth() {
@@ -63,6 +68,7 @@ public class HealthCheckService {
         response.put("database", checkDatabase());
         response.put("fileSystem", checkFileSystem());
         response.put("jasperTemplate", checkJasperFile());
+        response.put("emailConnection", checkEmailConnection());
 
         return response;
     }
@@ -138,6 +144,21 @@ public class HealthCheckService {
             jasperStatus.put("status", "Error: " + e.getMessage());
         }
         return jasperStatus;
+    }
+
+    private Map<String, String> checkEmailConnection() {
+        Map<String, String> emailStatus = new HashMap<>();
+        try {
+            if (javaMailSender instanceof JavaMailSenderImpl) {
+                ((JavaMailSenderImpl) javaMailSender).testConnection();
+                emailStatus.put("status", "OK");
+            } else {
+                emailStatus.put("status", "Error: No se puede probar la conexión pues el MailSender no es implementación por defecto.");
+            }
+        } catch (Exception e) {
+            emailStatus.put("status", "Error de conexión/autenticación SMTP: " + e.getMessage());
+        }
+        return emailStatus;
     }
 
 }
