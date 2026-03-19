@@ -31,6 +31,12 @@ public class HealthCheckService {
     @Value("${acta.imagenes.relative-path}")
     private String relativePath;
 
+    @Value("${acta.reporte.jasper-sub-dir:jasperReports}")
+    private String jasperSubDir;
+
+    @Value("${acta.reporte.nombre-archivo:actaVisitaComercial}")
+    private String jasperFileName;
+
     public HealthCheckService(ActaVisitaRepository actaVisitaRepository,
             FirmaActaRepository firmaActaRepository,
             ImagenActaRepository imagenActaRepository,
@@ -56,6 +62,7 @@ public class HealthCheckService {
 
         response.put("database", checkDatabase());
         response.put("fileSystem", checkFileSystem());
+        response.put("jasperTemplate", checkJasperFile());
 
         return response;
     }
@@ -110,6 +117,27 @@ public class HealthCheckService {
         }
 
         return fsStatus;
+    }
+
+    private Map<String, String> checkJasperFile() {
+        Map<String, String> jasperStatus = new HashMap<>();
+        try {
+            Path jasperPath = Paths.get(basePath, jasperSubDir, jasperFileName + ".jasper");
+            jasperStatus.put("path", jasperPath.toString());
+            
+            if (Files.exists(jasperPath)) {
+                if (Files.isReadable(jasperPath)) {
+                    jasperStatus.put("status", "OK");
+                } else {
+                    jasperStatus.put("status", "Error: El archivo Jasper existe pero la aplicación no tiene permisos de lectura.");
+                }
+            } else {
+                jasperStatus.put("status", "Error: El archivo de plantilla Jasper (.jasper) no existe en la ruta esperada.");
+            }
+        } catch (Exception e) {
+            jasperStatus.put("status", "Error: " + e.getMessage());
+        }
+        return jasperStatus;
     }
 
 }
