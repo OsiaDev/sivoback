@@ -42,6 +42,7 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
                                    SiiVerificacionSiplaftEntity siplaft,
                                    SiiVerificacionJuegoResponsableEntity juegoResponsableEntity,
                                    SiiFirmaActaEntity firma,
+                                   SiiResumenInventarioEntity resumen,
                                    List<SiiInventarioRegistradoEntity> inventarios,
                                    List<SiiNovedadRegistradaEntity> novedades) {
         Integer numActa = autoComisorio.getAucNumero();
@@ -50,7 +51,7 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
         try {
             // 1. Construir contexto y generar PDF en memoria
             ActaReporteContextDTO context = actaReporteContextMapper.mapear(
-                    autoComisorio, actaVisita, contractual, siplaft, juegoResponsableEntity, firma, inventarios, novedades);
+                    autoComisorio, actaVisita, contractual, siplaft, juegoResponsableEntity, firma, resumen, inventarios, novedades);
 
             byte[] pdf = actaReporteService.generarReporteActa(context);
 

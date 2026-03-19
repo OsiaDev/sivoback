@@ -136,6 +136,21 @@ public class ActaReporteServiceImpl implements ActaReporteService {
             p.put("fechaAuto", ctx.getFechaAuto()
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         }
+        if (ctx.getFechaFinVisita() != null) {
+            p.put("fechaFinVisita", ctx.getFechaFinVisita()
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        }
+
+        p.put("latitud", ctx.getLatitud());
+        p.put("longitud", ctx.getLongitud());
+
+        p.put("observacionColjuegos", ctx.getObservacionColjuegos());
+        p.put("observacionOperador", ctx.getObservacionOperador());
+
+        // Responsables
+        p.put("cuentaProgramaJuegoResp", ctx.getCuentaProgramaJuegoResp());
+        p.put("cuentaTestIdentRiesgos", ctx.getCuentaTestIdentRiesgos());
+        p.put("existenPiezasPublicitarias", ctx.getExistenPiezasPublicitarias());
 
         // ── Verificación contractual ────────────────────────────────────────────
         p.put("avisoAutorizacion", ctx.getAvisoAutorizacion());

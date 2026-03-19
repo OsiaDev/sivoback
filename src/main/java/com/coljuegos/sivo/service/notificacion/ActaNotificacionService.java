@@ -18,6 +18,7 @@ public interface ActaNotificacionService {
                             SiiVerificacionSiplaftEntity siplaft,
                             SiiVerificacionJuegoResponsableEntity juegoResponsableEntity,
                             SiiFirmaActaEntity firma,
+                            SiiResumenInventarioEntity resumen,
                             List<SiiInventarioRegistradoEntity> inventarios,
                             List<SiiNovedadRegistradaEntity> novedades);
 

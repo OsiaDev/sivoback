@@ -17,6 +17,7 @@ public class ActaReporteContextMapper {
             SiiVerificacionSiplaftEntity siplaft,
             SiiVerificacionJuegoResponsableEntity juegoResp,
             SiiFirmaActaEntity firma,
+            SiiResumenInventarioEntity resumen,
             List<SiiInventarioRegistradoEntity> inventarios,
             List<SiiNovedadRegistradaEntity> novedades) {
 
@@ -72,6 +73,21 @@ public class ActaReporteContextMapper {
                 .formatoReporteInterno(siplaft != null ? siplaft.getVsiFormatoReporteInterno() : null)
                 .senalesAlerta(siplaft != null ? siplaft.getVsiSenalesAlerta() : null)
                 .conoceCodigoConducta(siplaft != null ? siplaft.getVsiConoceCodigoConducta() : null)
+
+                // Responsable
+                .cuentaProgramaJuegoResp(juegoResp != null ? juegoResp.getVjrCuentaProgramaJuegoResp() : null)
+                .cuentaTestIdentRiesgos(juegoResp != null ? juegoResp.getVjrCuentaTestIdentRiesgos() : null)
+                .existenPiezasPublicitarias(juegoResp != null ? juegoResp.getVjrExistenPiezasPublicitarias() : null)
+
+                // Responsable
+                .observacionColjuegos(resumen != null ? resumen.getRsiNotasResumen() : null)
+                .observacionOperador(resumen != null ? resumen.getRsiObservacionesOperador() : null)
+
+                // Locacion
+                .latitud(resumen != null ? (resumen.getRsiLatitud() != null ? resumen.getRsiLatitud().toString() : null) : null)
+                .longitud(resumen != null ? (resumen.getRsiLongitud() != null ? resumen.getRsiLongitud().toString() : null) : null)
+
+                .fechaFinVisita(acta != null ? acta.getAviFechaRegistro() : null)
 
                 // Firmas
                 .nombreFiscalizador(firma != null ? firma.getFiaNombreFiscPrincipal() : null)

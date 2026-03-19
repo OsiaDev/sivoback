@@ -84,6 +84,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             SiiVerificacionSiplaftEntity entidadSiplaft = null;
             SiiVerificacionJuegoResponsableEntity entidadJuegoResp = null;
             SiiFirmaActaEntity entidadFirma = null;
+            SiiResumenInventarioEntity entidadResumen = null;
             List<SiiInventarioRegistradoEntity> listaInventarios = Collections.emptyList();
             List<SiiNovedadRegistradaEntity> listaNovedades = Collections.emptyList();
 
@@ -144,7 +145,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             }
 
             // Guardar resumen del inventario (incluye coordenadas GPS del acta)
-            this.guardarResumenInventario(
+            entidadResumen = this.guardarResumenInventario(
                     actaCompleteDTO.getResumenInventario(),
                     actaCompleteDTO.getLatitud(),
                     actaCompleteDTO.getLongitud(),
@@ -166,7 +167,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             // PASAMOS TODAS LAS ENTIDADES DIRECTAMENTE PARA EVITAR HANGS POR RE-QUERY
             this.lanzarNotificacionAsincronaDirecto(
                     autoComisorio, entidadActa, entidadContractual, entidadSiplaft, 
-                    entidadJuegoResp, entidadFirma, listaInventarios, listaNovedades);
+                    entidadJuegoResp, entidadFirma, entidadResumen, listaInventarios, listaNovedades);
 
             return ActaSincronizacionResponseDTO.success(
                     actaCompleteDTO.getNumActa(),
@@ -189,6 +190,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             SiiVerificacionSiplaftEntity siplaft,
             SiiVerificacionJuegoResponsableEntity juegoResp,
             SiiFirmaActaEntity firma,
+            SiiResumenInventarioEntity resumen,
             List<SiiInventarioRegistradoEntity> inventarios,
             List<SiiNovedadRegistradaEntity> novedades) {
         
@@ -200,7 +202,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             this.inicializarAsociaciones(auto);
 
             actaNotificacionService.notificarActaAsync(
-                    auto, acta, contractual, siplaft, juegoResp, firma, inventarios, novedades
+                    auto, acta, contractual, siplaft, juegoResp, firma, resumen, inventarios, novedades
             );
 
         } catch (Exception e) {
@@ -558,7 +560,7 @@ public class UploadActaServiceImpl implements UploadActaService {
         }
     }
 
-    private void guardarResumenInventario(ResumenInventarioDTO resumenDTO,
+    private SiiResumenInventarioEntity guardarResumenInventario(ResumenInventarioDTO resumenDTO,
                                           Double latitud,
                                           Double longitud,
                                           SiiAutoComisorioEntity autoComisorio,
@@ -594,6 +596,7 @@ public class UploadActaServiceImpl implements UploadActaService {
 
             log.info("ResumenInventario guardado exitosamente para acta: {}, código: {}",
                     numActa, resumenEntity.getRsiCodigo());
+            return resumenEntity;
 
         } catch (Exception e) {
             log.error("Error al guardar ResumenInventario para acta {}: {}", numActa, e.getMessage(), e);
