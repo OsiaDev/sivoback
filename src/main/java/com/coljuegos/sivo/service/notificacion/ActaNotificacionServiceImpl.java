@@ -129,6 +129,7 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
 
             helper.setTo(destinatarios.toArray(new String[0]));
             helper.setFrom(remitente);
+            helper.setReplyTo(remitente);
             helper.setSubject("Acta de Visita de Fiscalización No. " + numActa);
             
             String htmlContent = "<h3>Notificación de Acta de Visita</h3>" +
