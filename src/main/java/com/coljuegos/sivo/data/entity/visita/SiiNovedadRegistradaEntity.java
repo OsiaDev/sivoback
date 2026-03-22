@@ -20,9 +20,7 @@ public class SiiNovedadRegistradaEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "SEQ_NOVEDAD_REG_SIVO_COD")
-    @SequenceGenerator(name = "SEQ_NOVEDAD_REG_SIVO_COD",
-            sequenceName = "SEQ_NOVEDAD_REG_SIVO_COD",
-            allocationSize = 1)
+    @SequenceGenerator(name = "SEQ_NOVEDAD_REG_SIVO_COD", sequenceName = "SEQ_NOVEDAD_REG_SIVO_COD", allocationSize = 1)
     @Column(name = "NOR_CODIGO")
     private Long norCodigo;
 
@@ -59,6 +57,9 @@ public class SiiNovedadRegistradaEntity implements Serializable {
 
     @Column(name = "NOR_VALOR_CREDITO", length = 50)
     private String norValorCredito;
+
+    @Column(name = "NOR_NUMERO_INTERNO_MET", length = 255)
+    private String norNumeroInternoMet;
 
     @Column(name = "NOR_COIN_IN_MET", length = 50)
     private String norCoinInMet;

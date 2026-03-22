@@ -13,6 +13,7 @@ public class NovedadRegistradaDTO {
     private Boolean valorPremios;
     private String operando;
     private String valorCredito;
+    private String numeroInternoMet;
     private String coinInMet;
     private String coinOutMet;
     private String jackpotMet;

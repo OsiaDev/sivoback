@@ -114,6 +114,7 @@ public class NovedadRegistradaStorageServiceImpl implements NovedadRegistradaSto
 
         novedadEntity.setNorOperando(novedadDTO.getOperando());
         novedadEntity.setNorValorCredito(novedadDTO.getValorCredito());
+        novedadEntity.setNorNumeroInternoMet(novedadDTO.getNumeroInternoMet());
         novedadEntity.setNorCoinInMet(novedadDTO.getCoinInMet());
         novedadEntity.setNorCoinOutMet(novedadDTO.getCoinOutMet());
         novedadEntity.setNorJackpotMet(novedadDTO.getJackpotMet());

@@ -37,21 +37,22 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
     @Override
     @Async("actaNotificacionExecutor")
     public void notificarActaAsync(SiiAutoComisorioEntity autoComisorio,
-                                   SiiActaVisitaEntity actaVisita,
-                                   SiiVerificacionContractualEntity contractual,
-                                   SiiVerificacionSiplaftEntity siplaft,
-                                   SiiVerificacionJuegoResponsableEntity juegoResponsableEntity,
-                                   SiiFirmaActaEntity firma,
-                                   SiiResumenInventarioEntity resumen,
-                                   List<SiiInventarioRegistradoEntity> inventarios,
-                                   List<SiiNovedadRegistradaEntity> novedades) {
+            SiiActaVisitaEntity actaVisita,
+            SiiVerificacionContractualEntity contractual,
+            SiiVerificacionSiplaftEntity siplaft,
+            SiiVerificacionJuegoResponsableEntity juegoResponsableEntity,
+            SiiFirmaActaEntity firma,
+            SiiResumenInventarioEntity resumen,
+            List<SiiInventarioRegistradoEntity> inventarios,
+            List<SiiNovedadRegistradaEntity> novedades) {
         Integer numActa = autoComisorio.getAucNumero();
         log.info("[NOTIF] Iniciando notificación asíncrona para acta {}", numActa);
 
         try {
             // 1. Construir contexto y generar PDF en memoria
             ActaReporteContextDTO context = actaReporteContextMapper.mapear(
-                    autoComisorio, actaVisita, contractual, siplaft, juegoResponsableEntity, firma, resumen, inventarios, novedades);
+                    autoComisorio, actaVisita, contractual, siplaft, juegoResponsableEntity, firma, resumen,
+                    inventarios, novedades);
 
             byte[] pdf = actaReporteService.generarReporteActa(context);
 
@@ -101,15 +102,15 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
         }
 
         // 3. Email oficial del operador (desde el contrato)
-        if (auto.getSiiContrato() != null && 
-            auto.getSiiContrato().getSiiOperadorEntity() != null && 
-            auto.getSiiContrato().getSiiOperadorEntity().getSiiPersona() != null) {
-            
+        if (auto.getSiiContrato() != null &&
+                auto.getSiiContrato().getSiiOperadorEntity() != null &&
+                auto.getSiiContrato().getSiiOperadorEntity().getSiiPersona() != null) {
+
             String emailOperador = auto.getSiiContrato().getSiiOperadorEntity().getSiiPersona().getPerEmail();
             if (StringUtils.hasText(emailOperador)) {
                 emails.add(emailOperador.trim());
             }
-            
+
             String emailAlterno = auto.getSiiContrato().getSiiOperadorEntity().getSiiPersona().getPerEmailAlterno();
             if (StringUtils.hasText(emailAlterno)) {
                 emails.add(emailAlterno.trim());
@@ -131,11 +132,11 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
             helper.setFrom(remitente);
             helper.setReplyTo(remitente);
             helper.setSubject("Acta de Visita de Fiscalización No. " + numActa);
-            
+
             String htmlContent = "<h3>Notificación de Acta de Visita</h3>" +
                     "<p>Adjunto encontrará el acta de la visita de fiscalización realizada.</p>" +
                     "<p>Favor no responder a este correo.</p>";
-            
+
             helper.setText(htmlContent, true);
 
             // Adjuntar el PDF
