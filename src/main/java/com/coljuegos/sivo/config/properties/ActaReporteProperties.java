@@ -24,4 +24,8 @@ public class ActaReporteProperties {
 
     private String imagenDos = "logo_prosperidad_para_todos2";
 
+    private String check = "checked";
+
+    private String noCheck = "unchecked";
+
 }
