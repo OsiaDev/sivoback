@@ -100,7 +100,7 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("pathImagen", basePath + FileSystems.getDefault().getSeparator());
 
         Path rutaImagen1 = Paths.get(basePath, "jasperReports", "imagenes",
-                reporteProperties.getImagenUno() + ".jasper");
+                reporteProperties.getImagenUno() + ".png");
         Path rutaImagen2 = Paths.get(basePath, "jasperReports", "imagenes",
                 reporteProperties.getImagenDos() + ".png");
 
