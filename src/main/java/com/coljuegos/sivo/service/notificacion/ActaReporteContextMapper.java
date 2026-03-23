@@ -21,6 +21,14 @@ public class ActaReporteContextMapper {
             List<SiiInventarioRegistradoEntity> inventarios,
             List<SiiNovedadRegistradaEntity> novedades) {
 
+        long apagados = inventarios == null ? 0 : inventarios.stream()
+                .filter(inv -> "APAGADO".equalsIgnoreCase(inv.getInrEstado()))
+                .count();
+
+        long noEncontrados = inventarios == null ? 0 : inventarios.stream()
+                .filter(inv -> "NO_ENCONTRADO".equalsIgnoreCase(inv.getInrEstado()))
+                .count();
+
         return ActaReporteContextDTO.builder()
                 .numActa(auto.getAucNumero())
                 .aucCodigo(auto.getAucCodigo())
@@ -107,6 +115,8 @@ public class ActaReporteContextMapper {
 
                 .listaInventarios(inventarios)
                 .listaNovedades(novedades)
+                .numeroInventariosApagados(apagados)
+                .numeroInventariosNoEncontrados(noEncontrados)
                 .build();
     }
 }

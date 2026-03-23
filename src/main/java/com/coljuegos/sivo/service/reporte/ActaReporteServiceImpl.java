@@ -213,6 +213,10 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("listaNovedad", new JRBeanCollectionDataSource(
                 ctx.getListaNovedades() != null ? ctx.getListaNovedades() : Collections.emptyList()));
 
+        // ── Contadores de Inventario ────────────────────────────────────────────
+        p.put("numeroInventariosApagados", ctx.getNumeroInventariosApagados());
+        p.put("numeroInventariosNoEncontrados", ctx.getNumeroInventariosNoEncontrados());
+
         return p;
     }
 
