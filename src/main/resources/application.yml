@@ -79,6 +79,8 @@ acta:
     jasper-sub-dir: jasperReports
     nombre-archivo: actaVisitaComercial
     extension: pdf
+    imagen-uno: logo_prosperidad_para_todos2
+    imagen-dos: logo_prosperidad_para_todos2
   notificacion:
     asunto: "Coljuegos - Acta de Visita"
     remitente: ${MAIL_SENDER:no-reply@coljuegos.gov.co}
