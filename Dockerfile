@@ -21,6 +21,12 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
+# Timezone Bogotá
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/America/Bogota /etc/localtime && \
+    echo "America/Bogota" > /etc/timezone && \
+    apk del tzdata
+
 # Crear usuario no root (seguridad)
 RUN addgroup -S spring && adduser -S spring -G spring
 
@@ -31,4 +37,4 @@ USER spring
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "-Duser.timezone=America/Bogota", "app.jar"]
