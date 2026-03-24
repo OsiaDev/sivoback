@@ -217,8 +217,22 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("numeroInventariosRegistrados", ctx.getRegistrados());
         p.put("numeroInventariosApagados", ctx.getNumeroInventariosApagados());
         p.put("numeroInventariosNoEncontrados", ctx.getNumeroInventariosNoEncontrados());
+        p.put("numeroNovedadesSinPlaca", ctx.getNumeroNovedadesSinPlaca());
+        p.put("numeroMaquinasSerialDiferente", ctx.getNumeroMaquinasSerialDiferente());
+        p.put("numeroCodigoApuestaDiferente", ctx.getNumeroCodigoApuestaDiferente());
+        p.put("numeroNovedadesApagadas", ctx.getNumeroNovedadesApagadas());
+        p.put("numeroNovedadesOperando", ctx.getNumeroNovedadesOperando());
+        Integer totalInventarioEncontrado =
+                nvl(ctx.getRegistrados())
+                        - nvl(ctx.getNumeroInventariosNoEncontrados())
+                        + nvl(ctx.getNumeroNovedadesSinPlaca());
+        p.put("totalInventarioEncontrado", totalInventarioEncontrado);
 
         return p;
+    }
+
+    private int nvl(Integer value) {
+        return value == null ? 0 : value;
     }
 
     private String obtenerNombreMes(int numeroMes) {

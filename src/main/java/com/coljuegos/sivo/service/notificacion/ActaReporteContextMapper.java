@@ -28,6 +28,26 @@ public class ActaReporteContextMapper {
         long noEncontrados = inventarios == null ? 0 : inventarios.stream()
                 .filter(inv -> "NO_ENCONTRADO".equalsIgnoreCase(inv.getInrEstado()))
                 .count();
+                
+        long serialDiferente = inventarios == null ? 0 : inventarios.stream()
+                .filter(inv -> inv.getInrSerialDiferente() != null && !inv.getInrSerialDiferente().trim().isEmpty())
+                .count();
+
+        long sinPlaca = novedades == null ? 0 : novedades.stream()
+                .filter(nov -> Integer.valueOf(0).equals(nov.getNorTienePlaca()))
+                .count();
+                
+        long codigoApuestaDiferente = inventarios == null ? 0 : inventarios.stream()
+                .filter(inv -> Integer.valueOf(1).equals(inv.getInrCodApuestaDiferente()))
+                .count();
+
+        long novedadesApagadas = novedades == null ? 0 : novedades.stream()
+                .filter(nov -> "Apagado".equalsIgnoreCase(nov.getNorOperando()))
+                .count();
+
+        long novedadesOperando = novedades == null ? 0 : novedades.stream()
+                .filter(nov -> "Operando".equalsIgnoreCase(nov.getNorOperando()))
+                .count();
 
         Integer registrados = inventarios == null ? 0 : inventarios.size();
 
@@ -120,6 +140,11 @@ public class ActaReporteContextMapper {
                 .registrados(registrados)
                 .numeroInventariosApagados((int) apagados)
                 .numeroInventariosNoEncontrados((int) noEncontrados)
+                .numeroNovedadesSinPlaca((int) sinPlaca)
+                .numeroMaquinasSerialDiferente((int) serialDiferente)
+                .numeroCodigoApuestaDiferente((int) codigoApuestaDiferente)
+                .numeroNovedadesApagadas((int) novedadesApagadas)
+                .numeroNovedadesOperando((int) novedadesOperando)
                 .build();
     }
 }

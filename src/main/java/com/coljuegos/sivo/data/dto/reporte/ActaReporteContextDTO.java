@@ -95,5 +95,10 @@ public class ActaReporteContextDTO {
     private Integer registrados;
     private Integer numeroInventariosApagados;
     private Integer numeroInventariosNoEncontrados;
+    private Integer numeroNovedadesSinPlaca;
+    private Integer numeroMaquinasSerialDiferente;
+    private Integer numeroCodigoApuestaDiferente;
+    private Integer numeroNovedadesApagadas;
+    private Integer numeroNovedadesOperando;
 
 }
