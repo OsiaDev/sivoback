@@ -99,6 +99,21 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("path", dirJasper.toAbsolutePath());
         p.put("pathImagen", basePath + FileSystems.getDefault().getSeparator());
 
+        Path rutaImagen1 = Paths.get(basePath, "jasperReports", "imagenes",
+                reporteProperties.getImagenUno() + ".png");
+        Path rutaImagen2 = Paths.get(basePath, "jasperReports", "imagenes",
+                reporteProperties.getImagenDos() + ".png");
+        Path rutaCheck = Paths.get(basePath, "jasperReports", "imagenes",
+                reporteProperties.getCheck() + ".png");
+        Path rutaNoCheck = Paths.get(basePath, "jasperReports", "imagenes",
+                reporteProperties.getNoCheck() + ".png");
+
+        p.put("pathImagenJasper1", rutaImagen1.toAbsolutePath());
+        p.put("pathImagenJasper2", rutaImagen2.toAbsolutePath());
+
+        p.put("pathCheck", rutaCheck.toAbsolutePath());
+        p.put("pathNoCheck", rutaNoCheck.toAbsolutePath());
+
         // ── Datos generales del acta ────────────────────────────────────────────
         p.put("fechaInventario", ctx.getFechaInventario());
         p.put("actaNumero", ctx.getActaNumero());
@@ -136,6 +151,21 @@ public class ActaReporteServiceImpl implements ActaReporteService {
             p.put("fechaAuto", ctx.getFechaAuto()
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         }
+        if (ctx.getFechaFinVisita() != null) {
+            p.put("fechaFinVisita", ctx.getFechaFinVisita()
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        }
+
+        p.put("latitud", ctx.getLatitud());
+        p.put("longitud", ctx.getLongitud());
+
+        p.put("observacionColjuegos", ctx.getObservacionColjuegos());
+        p.put("observacionOperador", ctx.getObservacionOperador());
+
+        // Responsables
+        p.put("cuentaProgramaJuegoResp", ctx.getCuentaProgramaJuegoResp());
+        p.put("cuentaTestIdentRiesgos", ctx.getCuentaTestIdentRiesgos());
+        p.put("existenPiezasPublicitarias", ctx.getExistenPiezasPublicitarias());
 
         // ── Verificación contractual ────────────────────────────────────────────
         p.put("avisoAutorizacion", ctx.getAvisoAutorizacion());
@@ -183,7 +213,26 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("listaNovedad", new JRBeanCollectionDataSource(
                 ctx.getListaNovedades() != null ? ctx.getListaNovedades() : Collections.emptyList()));
 
+        // ── Contadores de Inventario ────────────────────────────────────────────
+        p.put("numeroInventariosRegistrados", ctx.getRegistrados());
+        p.put("numeroInventariosApagados", ctx.getNumeroInventariosApagados());
+        p.put("numeroInventariosNoEncontrados", ctx.getNumeroInventariosNoEncontrados());
+        p.put("numeroNovedadesSinPlaca", ctx.getNumeroNovedadesSinPlaca());
+        p.put("numeroMaquinasSerialDiferente", ctx.getNumeroMaquinasSerialDiferente());
+        p.put("numeroCodigoApuestaDiferente", ctx.getNumeroCodigoApuestaDiferente());
+        p.put("numeroNovedadesApagadas", ctx.getNumeroNovedadesApagadas());
+        p.put("numeroNovedadesOperando", ctx.getNumeroNovedadesOperando());
+        Integer totalInventarioEncontrado =
+                nvl(ctx.getRegistrados())
+                        - nvl(ctx.getNumeroInventariosNoEncontrados())
+                        + nvl(ctx.getNumeroNovedadesSinPlaca());
+        p.put("totalInventarioEncontrado", totalInventarioEncontrado);
+
         return p;
+    }
+
+    private int nvl(Integer value) {
+        return value == null ? 0 : value;
     }
 
     private String obtenerNombreMes(int numeroMes) {

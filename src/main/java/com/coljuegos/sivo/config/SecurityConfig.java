@@ -58,6 +58,8 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/public_resource").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/health/visita").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/notificacion/reenviar").permitAll()
                         .requestMatchers("/acta/**").hasAnyRole("ABOGADO_REVISOR")
 
                         // Swagger/OpenAPI (solo en desarrollo)

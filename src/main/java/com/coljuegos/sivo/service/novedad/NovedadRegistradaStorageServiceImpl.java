@@ -100,8 +100,21 @@ public class NovedadRegistradaStorageServiceImpl implements NovedadRegistradaSto
             novedadEntity.setNorTienePlaca(novedadDTO.getTienePlaca() ? 1 : 0);
         }
 
+        if (novedadDTO.getDescripcionJuego() != null) {
+            novedadEntity.setNorDescripcionJuego(novedadDTO.getDescripcionJuego() ? 1 : 0);
+        }
+
+        if (novedadDTO.getPlanPremios() != null) {
+            novedadEntity.setNorPlanPremios(novedadDTO.getPlanPremios() ? 1 : 0);
+        }
+
+        if (novedadDTO.getValorPremios() != null) {
+            novedadEntity.setNorValorPremios(novedadDTO.getValorPremios() ? 1 : 0);
+        }
+
         novedadEntity.setNorOperando(novedadDTO.getOperando());
         novedadEntity.setNorValorCredito(novedadDTO.getValorCredito());
+        novedadEntity.setNorNumeroInternoMet(novedadDTO.getNumeroInternoMet());
         novedadEntity.setNorCoinInMet(novedadDTO.getCoinInMet());
         novedadEntity.setNorCoinOutMet(novedadDTO.getCoinOutMet());
         novedadEntity.setNorJackpotMet(novedadDTO.getJackpotMet());

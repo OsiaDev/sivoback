@@ -42,7 +42,7 @@ public class ActaController {
         log.info("ActaController.upload - Usuario: {}, NumActa: {}",
                 usuario != null ? usuario.getUsername() : "null",
                 actaCompleteDTO != null ? actaCompleteDTO.getNumActa() : "null");
-
+        log.info("ActaController.upload - Acta: {}", actaCompleteDTO);
         if (usuario == null) {
             throw new BadCredentialsException("Error en el token");
         }

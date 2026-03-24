@@ -58,6 +58,21 @@ public class ActaReporteContextDTO {
     private String senalesAlerta;
     private String conoceCodigoConducta;
 
+    // Juegos Responsables
+    private String cuentaProgramaJuegoResp;
+    private String cuentaTestIdentRiesgos;
+    private String existenPiezasPublicitarias;
+
+    // Observaciones
+    private String observacionOperador;
+    private String observacionColjuegos;
+
+    private LocalDateTime fechaFinVisita;
+
+    // Locacion
+    private String latitud;
+    private String longitud;
+
     // Firma del acta
     private String nombreFiscalizador;
     private String ccFiscalizador;
@@ -75,5 +90,15 @@ public class ActaReporteContextDTO {
     // Listas para sub-reportes (JRBeanCollectionDataSource)
     private List<?> listaInventarios;
     private List<?> listaNovedades;
+
+    // Contadores de inventario
+    private Integer registrados;
+    private Integer numeroInventariosApagados;
+    private Integer numeroInventariosNoEncontrados;
+    private Integer numeroNovedadesSinPlaca;
+    private Integer numeroMaquinasSerialDiferente;
+    private Integer numeroCodigoApuestaDiferente;
+    private Integer numeroNovedadesApagadas;
+    private Integer numeroNovedadesOperando;
 
 }

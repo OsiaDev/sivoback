@@ -8,8 +8,12 @@ public class NovedadRegistradaDTO {
     private String marca;
     private String codigoApuesta;
     private Boolean tienePlaca;
+    private Boolean descripcionJuego;
+    private Boolean planPremios;
+    private Boolean valorPremios;
     private String operando;
     private String valorCredito;
+    private String numeroInternoMet;
     private String coinInMet;
     private String coinOutMet;
     private String jackpotMet;

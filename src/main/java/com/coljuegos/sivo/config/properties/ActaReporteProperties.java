@@ -20,4 +20,12 @@ public class ActaReporteProperties {
     /** Extensión del archivo de salida */
     private String extension = "pdf";
 
+    private String imagenUno = "LOGO_COLJUEGOS";
+
+    private String imagenDos = "logo_prosperidad_para_todos2";
+
+    private String check = "checked";
+
+    private String noCheck = "unchecked";
+
 }

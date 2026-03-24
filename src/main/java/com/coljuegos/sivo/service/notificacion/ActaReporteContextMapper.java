@@ -17,8 +17,39 @@ public class ActaReporteContextMapper {
             SiiVerificacionSiplaftEntity siplaft,
             SiiVerificacionJuegoResponsableEntity juegoResp,
             SiiFirmaActaEntity firma,
+            SiiResumenInventarioEntity resumen,
             List<SiiInventarioRegistradoEntity> inventarios,
             List<SiiNovedadRegistradaEntity> novedades) {
+
+        long apagados = inventarios == null ? 0 : inventarios.stream()
+                .filter(inv -> "APAGADO".equalsIgnoreCase(inv.getInrEstado()))
+                .count();
+
+        long noEncontrados = inventarios == null ? 0 : inventarios.stream()
+                .filter(inv -> "NO_ENCONTRADO".equalsIgnoreCase(inv.getInrEstado()))
+                .count();
+                
+        long serialDiferente = inventarios == null ? 0 : inventarios.stream()
+                .filter(inv -> inv.getInrSerialDiferente() != null && !inv.getInrSerialDiferente().trim().isEmpty())
+                .count();
+
+        long sinPlaca = novedades == null ? 0 : novedades.stream()
+                .filter(nov -> Integer.valueOf(0).equals(nov.getNorTienePlaca()))
+                .count();
+                
+        long codigoApuestaDiferente = inventarios == null ? 0 : inventarios.stream()
+                .filter(inv -> Integer.valueOf(1).equals(inv.getInrCodApuestaDiferente()))
+                .count();
+
+        long novedadesApagadas = novedades == null ? 0 : novedades.stream()
+                .filter(nov -> "Apagado".equalsIgnoreCase(nov.getNorOperando()))
+                .count();
+
+        long novedadesOperando = novedades == null ? 0 : novedades.stream()
+                .filter(nov -> "Operando".equalsIgnoreCase(nov.getNorOperando()))
+                .count();
+
+        Integer registrados = inventarios == null ? 0 : inventarios.size();
 
         return ActaReporteContextDTO.builder()
                 .numActa(auto.getAucNumero())
@@ -73,6 +104,21 @@ public class ActaReporteContextMapper {
                 .senalesAlerta(siplaft != null ? siplaft.getVsiSenalesAlerta() : null)
                 .conoceCodigoConducta(siplaft != null ? siplaft.getVsiConoceCodigoConducta() : null)
 
+                // Responsable
+                .cuentaProgramaJuegoResp(juegoResp != null ? juegoResp.getVjrCuentaProgramaJuegoResp() : null)
+                .cuentaTestIdentRiesgos(juegoResp != null ? juegoResp.getVjrCuentaTestIdentRiesgos() : null)
+                .existenPiezasPublicitarias(juegoResp != null ? juegoResp.getVjrExistenPiezasPublicitarias() : null)
+
+                // Responsable
+                .observacionColjuegos(resumen != null ? resumen.getRsiNotasResumen() : null)
+                .observacionOperador(resumen != null ? resumen.getRsiObservacionesOperador() : null)
+
+                // Locacion
+                .latitud(resumen != null ? (resumen.getRsiLatitud() != null ? resumen.getRsiLatitud().toString() : null) : null)
+                .longitud(resumen != null ? (resumen.getRsiLongitud() != null ? resumen.getRsiLongitud().toString() : null) : null)
+
+                .fechaFinVisita(acta != null ? acta.getAviFechaRegistro() : null)
+
                 // Firmas
                 .nombreFiscalizador(firma != null ? firma.getFiaNombreFiscPrincipal() : null)
                 .ccFiscalizador(firma != null ? (firma.getFiaCcFiscPrincipal() != null ? firma.getFiaCcFiscPrincipal().toString() : null) : null)
@@ -91,6 +137,14 @@ public class ActaReporteContextMapper {
 
                 .listaInventarios(inventarios)
                 .listaNovedades(novedades)
+                .registrados(registrados)
+                .numeroInventariosApagados((int) apagados)
+                .numeroInventariosNoEncontrados((int) noEncontrados)
+                .numeroNovedadesSinPlaca((int) sinPlaca)
+                .numeroMaquinasSerialDiferente((int) serialDiferente)
+                .numeroCodigoApuestaDiferente((int) codigoApuestaDiferente)
+                .numeroNovedadesApagadas((int) novedadesApagadas)
+                .numeroNovedadesOperando((int) novedadesOperando)
                 .build();
     }
 }
