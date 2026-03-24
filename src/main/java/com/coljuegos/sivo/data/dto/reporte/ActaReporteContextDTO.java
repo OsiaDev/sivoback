@@ -92,7 +92,8 @@ public class ActaReporteContextDTO {
     private List<?> listaNovedades;
 
     // Contadores de inventario
-    private Long numeroInventariosApagados;
-    private Long numeroInventariosNoEncontrados;
+    private Integer registrados;
+    private Integer numeroInventariosApagados;
+    private Integer numeroInventariosNoEncontrados;
 
 }

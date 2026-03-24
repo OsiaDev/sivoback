@@ -214,6 +214,7 @@ public class ActaReporteServiceImpl implements ActaReporteService {
                 ctx.getListaNovedades() != null ? ctx.getListaNovedades() : Collections.emptyList()));
 
         // ── Contadores de Inventario ────────────────────────────────────────────
+        p.put("numeroInventariosRegistrados", ctx.getRegistrados());
         p.put("numeroInventariosApagados", ctx.getNumeroInventariosApagados());
         p.put("numeroInventariosNoEncontrados", ctx.getNumeroInventariosNoEncontrados());
 

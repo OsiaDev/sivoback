@@ -28,6 +28,7 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
     private final ActaReporteService actaReporteService;
     private final ActaReporteContextMapper actaReporteContextMapper;
     private final JavaMailSender mailSender;
+    private final com.coljuegos.sivo.data.repository.ActaVisitaRepository actaVisitaRepository;
 
     @org.springframework.beans.factory.annotation.Value("${acta.notificacion.remitente:no-reply@coljuegos.gov.co}")
     private String remitente;
@@ -49,6 +50,13 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
         log.info("[NOTIF] Iniciando notificación asíncrona para acta {}", numActa);
 
         try {
+            if (actaVisita != null) {
+                actaVisita.setAviIntentosNotificacion(
+                        actaVisita.getAviIntentosNotificacion() == null ? 1 : actaVisita.getAviIntentosNotificacion() + 1
+                );
+                actaVisitaRepository.save(actaVisita);
+            }
+
             // 1. Construir contexto y generar PDF en memoria
             ActaReporteContextDTO context = actaReporteContextMapper.mapear(
                     autoComisorio, actaVisita, contractual, siplaft, juegoResponsableEntity, firma, resumen,
@@ -58,7 +66,7 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
 
             if (pdf == null || pdf.length == 0) {
                 log.error("[NOTIF] No se pudo generar el PDF para acta {}. Se cancela el envío.", numActa);
-                return;
+                throw new RuntimeException("No se pudo generar el PDF para el acta");
             }
 
             // 2. Resolver destinatarios
@@ -66,6 +74,11 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
 
             if (destinatarios.isEmpty()) {
                 log.warn("[NOTIF] No hay destinatarios válidos para acta {}. Se omite el envío.", numActa);
+                if (actaVisita != null) {
+                    actaVisita.setAviEstadoNotificacion("COMPLETADO");
+                    actaVisita.setAviUltimoError("Sin destinatarios válidos, se marca como completado.");
+                    actaVisitaRepository.save(actaVisita);
+                }
                 return;
             }
 
@@ -77,9 +90,25 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
 
             log.info("[NOTIF] Notificación completada satisfactoriamente para acta {}", numActa);
 
+            if (actaVisita != null) {
+                actaVisita.setAviEstadoNotificacion("COMPLETADO");
+                actaVisita.setAviUltimoError(null);
+                actaVisitaRepository.save(actaVisita);
+            }
+
         } catch (Exception e) {
             log.error("[NOTIF] Error crítico en proceso de notificación de acta {}: {}",
                     numActa, e.getMessage(), e);
+            
+            if (actaVisita != null) {
+                String errorMsg = e.getMessage();
+                if (errorMsg != null && errorMsg.length() > 3900) {
+                    errorMsg = errorMsg.substring(0, 3900) + "...";
+                }
+                actaVisita.setAviEstadoNotificacion("ERROR");
+                actaVisita.setAviUltimoError(errorMsg);
+                actaVisitaRepository.save(actaVisita);
+            }
         }
     }
 

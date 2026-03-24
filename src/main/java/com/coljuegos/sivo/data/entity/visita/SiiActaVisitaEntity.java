@@ -44,6 +44,15 @@ public class SiiActaVisitaEntity implements Serializable {
     @Column(name = "AVI_FECHA_REGISTRO", nullable = false)
     private LocalDateTime aviFechaRegistro;
 
+    @Column(name = "AVI_ESTADO_NOTIFICACION", length = 20)
+    private String aviEstadoNotificacion = "PENDIENTE";
+
+    @Column(name = "AVI_INTENTOS_NOTIFICACION")
+    private Integer aviIntentosNotificacion = 0;
+
+    @Column(name = "AVI_ULTIMO_ERROR", length = 4000)
+    private String aviUltimoError;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "AUC_CODIGO", nullable = false)
     private SiiAutoComisorioEntity siiAutoComisorio;

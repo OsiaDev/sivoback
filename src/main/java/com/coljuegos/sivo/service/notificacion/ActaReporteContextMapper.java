@@ -29,6 +29,8 @@ public class ActaReporteContextMapper {
                 .filter(inv -> "NO_ENCONTRADO".equalsIgnoreCase(inv.getInrEstado()))
                 .count();
 
+        Integer registrados = inventarios == null ? 0 : inventarios.size();
+
         return ActaReporteContextDTO.builder()
                 .numActa(auto.getAucNumero())
                 .aucCodigo(auto.getAucCodigo())
@@ -115,8 +117,9 @@ public class ActaReporteContextMapper {
 
                 .listaInventarios(inventarios)
                 .listaNovedades(novedades)
-                .numeroInventariosApagados(apagados)
-                .numeroInventariosNoEncontrados(noEncontrados)
+                .registrados(registrados)
+                .numeroInventariosApagados((int) apagados)
+                .numeroInventariosNoEncontrados((int) noEncontrados)
                 .build();
     }
 }
