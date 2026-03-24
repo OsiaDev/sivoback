@@ -83,6 +83,8 @@ acta:
     imagen-dos: logo_prosperidad_para_todos2
     check: checked
     no-check: unchecked
+    inventario: actaVisitaComercial_Inventario
+    novedad: actaVisitaComercial_Novedad
   notificacion:
     asunto: "Coljuegos - Acta de Visita"
     remitente: ${MAIL_SENDER:no-reply@coljuegos.gov.co}

@@ -28,4 +28,8 @@ public class ActaReporteProperties {
 
     private String noCheck = "unchecked";
 
+    private String inventario = "actaVisitaComercial_Inventario";
+
+    private String novedad = "actaVisitaComercial_Novedad";
+
 }
