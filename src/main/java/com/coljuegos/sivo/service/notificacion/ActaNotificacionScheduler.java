@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class ActaNotificacionScheduler {
     private final ReenvioCorreoService reenvioCorreoService;
 
     @Scheduled(fixedDelayString = "${acta.notificacion.retry.delay:300000}")
+    @Transactional
     public void procesarReintentos() {
         log.debug("[SCHEDULER] Buscando actas pendientes o con error de notificación para reintento...");
         List<SiiActaVisitaEntity> actasParaNotificar = actaVisitaRepository.findActasParaNotificar(5);
