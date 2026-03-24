@@ -225,7 +225,7 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         Integer totalInventarioEncontrado =
                 nvl(ctx.getRegistrados())
                         - nvl(ctx.getNumeroInventariosNoEncontrados())
-                        + nvl(ctx.getNumeroNovedadesSinPlaca());
+                        + nvl(ctx.getNumeroNovedadesSinPlaca()) + nvl(ctx.getNumeroNovedadesOperando());
         p.put("totalInventarioEncontrado", totalInventarioEncontrado);
 
         return p;
