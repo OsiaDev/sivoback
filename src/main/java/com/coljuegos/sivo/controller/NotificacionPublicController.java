@@ -19,17 +19,18 @@ public class NotificacionPublicController {
     @PostMapping(path = "reenviar")
     public ResponseEntity<Map<String, String>> reenviarCorreo(@RequestParam(name = "numActa") Integer numActa) {
         log.info("NotificacionPublicController.reenviarCorreo - Peticion para reenviar acta: {}", numActa);
-        
+
         if (numActa == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "El parámetro numActa es requerido"));
         }
 
         try {
-            reenvioCorreoService.reenviarCorreoPost(numActa);
+            reenvioCorreoService.reenviarCorreoPost(numActa, true);
             return ResponseEntity.ok(Map.of("mensaje", "Solicitud de reenvío en proceso para el acta " + numActa));
         } catch (Exception e) {
             log.error("Error al procesar reenvío de correo: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
+
 }

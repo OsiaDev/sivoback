@@ -54,10 +54,10 @@ spring:
     database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
   mail:
     host: smtp.gmail.com
