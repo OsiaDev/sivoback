@@ -96,6 +96,10 @@ jwt:
 aes:
   secretKey: QwErTyUiOpAsDfGh
 
+ldap:
+  url: ${LDAP_URL:ldap://coljuegos.local:389}
+  domain: ${LDAP_DOMAIN:coljuegos}
+
 management:
   endpoints:
     web:

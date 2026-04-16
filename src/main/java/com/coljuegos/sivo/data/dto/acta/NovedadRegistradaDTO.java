@@ -20,5 +20,6 @@ public class NovedadRegistradaDTO {
     private String coinInSclm;
     private String coinOutSclm;
     private String jackpotSclm;
+    private Boolean contadoresVerificado;
     private String observaciones;
 }
