@@ -330,6 +330,7 @@ public class UploadActaServiceImpl implements UploadActaService {
             actaVisitaEntity.setAviCargoPresente(actaVisitaDTO.getCargoPresente());
             actaVisitaEntity.setAviEmailPresente(actaVisitaDTO.getEmailPresente());
             actaVisitaEntity.setAviCorreosContacto(actaVisitaDTO.getCorreosContacto());
+            actaVisitaEntity.setAviTipoDocumentoPresente(actaVisitaDTO.getTipoDocumentoPresente());
 
             // Guardar en la base de datos
             SiiActaVisitaEntity guardado = this.actaVisitaRepository.save(actaVisitaEntity);

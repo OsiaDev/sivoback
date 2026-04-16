@@ -10,4 +10,5 @@ public class ActaVisitaDTO {
     private String cargoPresente;
     private String emailPresente;
     private String correosContacto;
+    private String tipoDocumentoPresente;
 }
