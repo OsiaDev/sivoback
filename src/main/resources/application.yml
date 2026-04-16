@@ -54,10 +54,10 @@ spring:
     database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
   mail:
     host: smtp.gmail.com
@@ -83,6 +83,8 @@ acta:
     imagen-dos: logo_prosperidad_para_todos2
     check: checked
     no-check: unchecked
+    inventario: actaVisitaComercial_Inventario
+    novedad: actaVisitaComercial_Novedad
   notificacion:
     asunto: "Coljuegos - Acta de Visita"
     remitente: ${MAIL_SENDER:no-reply@coljuegos.gov.co}
@@ -93,6 +95,10 @@ jwt:
 
 aes:
   secretKey: QwErTyUiOpAsDfGh
+
+ldap:
+  url: ${LDAP_URL:ldap://coljuegos.local:389}
+  domain: ${LDAP_DOMAIN:coljuegos}
 
 management:
   endpoints:

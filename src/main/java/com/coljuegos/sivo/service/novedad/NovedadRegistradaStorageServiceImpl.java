@@ -112,6 +112,10 @@ public class NovedadRegistradaStorageServiceImpl implements NovedadRegistradaSto
             novedadEntity.setNorValorPremios(novedadDTO.getValorPremios() ? 1 : 0);
         }
 
+        if (novedadDTO.getContadoresVerificado() != null) {
+            novedadEntity.setNorContadoresVerificado(novedadDTO.getContadoresVerificado() ? 1 : 0);
+        }
+
         novedadEntity.setNorOperando(novedadDTO.getOperando());
         novedadEntity.setNorValorCredito(novedadDTO.getValorCredito());
         novedadEntity.setNorNumeroInternoMet(novedadDTO.getNumeroInternoMet());

@@ -40,6 +40,7 @@ public class ActaServiceImpl implements ActaService {
             response.setActas(Collections.emptyList());
             return response;
         }
+        log.info("Codigo: {}, asignadas actas: {}", perCodigo, autos.size());
 
         response.setActas(this.procesarAutoComisorio(autos));
         return response;

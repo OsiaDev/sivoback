@@ -79,6 +79,9 @@ public class SiiNovedadRegistradaEntity implements Serializable {
     @Column(name = "NOR_JACKPOT_SCLM", length = 50)
     private String norJackpotSclm;
 
+    @Column(name = "NOR_CONTADORES_VERIFICADO")
+    private Integer norContadoresVerificado;
+
     @Column(name = "NOR_OBSERVACIONES", columnDefinition = "TEXT")
     private String norObservaciones;
 

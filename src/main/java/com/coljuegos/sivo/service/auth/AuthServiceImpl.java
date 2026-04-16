@@ -4,6 +4,7 @@ import com.coljuegos.sivo.data.dto.AuthRequestDTO;
 import com.coljuegos.sivo.data.dto.AuthResponseDTO;
 import com.coljuegos.sivo.data.dto.UserDTO;
 import com.coljuegos.sivo.data.dto.UserResponseDTO;
+import com.coljuegos.sivo.service.ldap.LdapService;
 import com.coljuegos.sivo.service.user.UserDetailsService;
 import com.coljuegos.sivo.util.AesUtil;
 import com.coljuegos.sivo.util.JwtUtil;
@@ -26,6 +27,8 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtUtil jwtUtil;
 
+    private final LdapService ldapService;
+
     @Override
     public AuthResponseDTO auth(AuthRequestDTO authRequest) {
         try {
@@ -34,12 +37,14 @@ public class AuthServiceImpl implements AuthService {
                 throw new BadCredentialsException("Credenciales incompletas");
             }
 
-            log.info("Iniciando proceso de autenticación para usuario: {}", authRequest.getUsername());
+            String username = authRequest.getUsername().trim().toUpperCase();
 
-            UserDTO user = (UserDTO) this.userDetailsService.loadUserByUsername(authRequest.getUsername());
+            log.info("Iniciando proceso de autenticación para usuario: {}", username);
+
+            UserDTO user = (UserDTO) this.userDetailsService.loadUserByUsername(username);
 
             if (user == null) {
-                log.warn("Usuario {} no encontrado en el sistema", authRequest.getUsername());
+                log.warn("Usuario {} no encontrado en el sistema", username);
                 throw new BadCredentialsException("Credenciales inválidas");
             }
 
@@ -52,11 +57,27 @@ public class AuthServiceImpl implements AuthService {
                 throw new BadCredentialsException("Error en el formato de credenciales");
             }
 
+            //  PASO 1: Autenticación por BD (hash MD5 con salt)
             String hashedPassword = convertPassword(decryptedPassword, user.getSalt());
+            boolean autenticadoPorBD = hashedPassword.equalsIgnoreCase(user.getPassword());
 
-            if (!hashedPassword.equalsIgnoreCase(user.getPassword())) {
-                log.warn("Contraseña incorrecta para usuario: {} - Hash esperado vs recibido", authRequest.getUsername());
-                throw new BadCredentialsException("Credenciales inválidas");
+
+            if (!autenticadoPorBD) {
+                // PASO 2: Fallback → Directorio Activo (LDAP)
+                // Igual que el legacy: si falla BD, intenta AD con password en texto plano
+                log.info("Autenticación BD fallida para '{}', intentando LDAP...", username);
+
+                boolean ldapOk = ldapService.autenticar(authRequest.getUsername().trim(), decryptedPassword);
+
+                if (!ldapOk) {
+                    log.warn("Autenticación LDAP también fallida para usuario: {}", username);
+                    throw new BadCredentialsException("Credenciales inválidas");
+                }
+
+                log.info("Autenticación LDAP exitosa para usuario: {}", username);
+                // El usuario ya fue cargado desde BD arriba — continuamos con ese objeto
+            } else {
+                log.info("Autenticación por BD exitosa para usuario: {}", username);
             }
 
             String token;

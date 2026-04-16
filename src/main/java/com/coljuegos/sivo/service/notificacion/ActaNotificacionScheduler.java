@@ -32,7 +32,7 @@ public class ActaNotificacionScheduler {
 
         for (SiiActaVisitaEntity acta : actasParaNotificar) {
             try {
-                reenvioCorreoService.reenviarCorreoPost(acta.getSiiAutoComisorio().getAucNumero());
+                reenvioCorreoService.reenviarCorreoPost(acta.getSiiAutoComisorio().getAucNumero(), false);
             } catch (Exception e) {
                 log.error("[SCHEDULER] Error al invocar el reenvío de correo para el acta {}: {}",
                         acta.getSiiAutoComisorio().getAucNumero(), e.getMessage());

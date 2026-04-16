@@ -44,6 +44,8 @@ dependencies {
 	implementation("org.codehaus.groovy:groovy-json:3.0.19")
 	implementation("org.codehaus.groovy:groovy-xml:3.0.19")
 
+	implementation("com.sun.jndi:ldap")
+
     //runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
