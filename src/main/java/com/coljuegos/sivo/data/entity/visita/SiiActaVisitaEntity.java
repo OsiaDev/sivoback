@@ -41,6 +41,9 @@ public class SiiActaVisitaEntity implements Serializable {
     @Column(name = "AVI_CORREOS_CONTACTO", length = 500)
     private String aviCorreosContacto;
 
+    @Column(name = "AVI_TIPO_DOCUMENTO_PRESENTE", length = 20)
+    private String aviTipoDocumentoPresente;
+
     @Column(name = "AVI_FECHA_REGISTRO", nullable = false)
     private LocalDateTime aviFechaRegistro;
 
