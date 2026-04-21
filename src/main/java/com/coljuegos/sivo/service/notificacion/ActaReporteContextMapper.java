@@ -19,7 +19,9 @@ public class ActaReporteContextMapper {
             SiiFirmaActaEntity firma,
             SiiResumenInventarioEntity resumen,
             List<SiiInventarioRegistradoEntity> inventarios,
-            List<SiiNovedadRegistradaEntity> novedades) {
+            List<SiiNovedadRegistradaEntity> novedades,
+            SiiVerificacionBingoEntity verificacionBingo,
+            List<SiiInventarioBingoRegistradoEntity> inventariosBingo) {
 
         long apagados = inventarios == null ? 0 : inventarios.stream()
                 .filter(inv -> "APAGADO".equalsIgnoreCase(inv.getInrEstado()))
@@ -135,8 +137,17 @@ public class ActaReporteContextMapper {
                 .rolFirmaOperador(firma != null ? firma.getFiaCargoOperador() : null)
                 .firmaOperadorPath(firma != null ? firma.getFiaPathFirmaOperador() : null)
 
+                // Bingo
+                .bingoCartonesModulos(verificacionBingo != null ? verificacionBingo.getVbiCartonesModulos() : null)
+                .bingoSistemaTecnologico(verificacionBingo != null ? verificacionBingo.getVbiSistemaTecnologico() : null)
+                .bingoSistemaInterconectado(verificacionBingo != null ? verificacionBingo.getVbiSistemaInterconectado() : null)
+                .bingoEventosEspeciales(verificacionBingo != null ? verificacionBingo.getVbiEventosEspeciales() : null)
+                .bingoTipoBalotera(verificacionBingo != null ? verificacionBingo.getVbiTipoBalotera() : null)
+                .bingoValorCarton(verificacionBingo != null ? verificacionBingo.getVbiValorCarton() : null)
+
                 .listaInventarios(inventarios)
                 .listaNovedades(novedades)
+                .listaInventariosBingo(inventariosBingo)
                 .registrados(registrados)
                 .numeroInventariosApagados((int) apagados)
                 .numeroInventariosNoEncontrados((int) noEncontrados)

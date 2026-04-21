@@ -198,6 +198,14 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("senalesAlerta", ctx.getSenalesAlerta());
         p.put("codigoConducta", ctx.getConoceCodigoConducta());
 
+        // ── Verificación Bingo ──────────────────────────────────────────────────
+        p.put("bingoCartonesModulos", ctx.getBingoCartonesModulos());
+        p.put("bingoSistemaTecnologico", ctx.getBingoSistemaTecnologico());
+        p.put("bingoSistemaInterconectado", ctx.getBingoSistemaInterconectado());
+        p.put("bingoEventosEspeciales", ctx.getBingoEventosEspeciales());
+        p.put("bingoTipoBalotera", ctx.getBingoTipoBalotera());
+        p.put("bingoValorCarton", ctx.getBingoValorCarton());
+
         // ── Firmas ──────────────────────────────────────────────────────────────
         // Nombres de parámetros Jasper idénticos al legacy ResultadoVisitaMB.imprimir()
         p.put("nombreFiscalizador", ctx.getNombreFiscalizador());
@@ -220,6 +228,8 @@ public class ActaReporteServiceImpl implements ActaReporteService {
                 ctx.getListaInventarios() != null ? ctx.getListaInventarios() : Collections.emptyList()));
         p.put("listaNovedad", new JRBeanCollectionDataSource(
                 ctx.getListaNovedades() != null ? ctx.getListaNovedades() : Collections.emptyList()));
+        p.put("listaInventariosBingo", new JRBeanCollectionDataSource(
+                ctx.getListaInventariosBingo() != null ? ctx.getListaInventariosBingo() : Collections.emptyList()));
 
         // ── Contadores de Inventario ────────────────────────────────────────────
         p.put("numeroInventariosRegistrados", ctx.getRegistrados());

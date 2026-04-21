@@ -58,6 +58,14 @@ public class ActaReporteContextDTO {
     private String senalesAlerta;
     private String conoceCodigoConducta;
 
+    // Verificación Bingo
+    private String bingoCartonesModulos;
+    private String bingoSistemaTecnologico;
+    private String bingoSistemaInterconectado;
+    private String bingoEventosEspeciales;
+    private String bingoTipoBalotera;
+    private String bingoValorCarton;
+
     // Juegos Responsables
     private String cuentaProgramaJuegoResp;
     private String cuentaTestIdentRiesgos;
@@ -90,6 +98,7 @@ public class ActaReporteContextDTO {
     // Listas para sub-reportes (JRBeanCollectionDataSource)
     private List<?> listaInventarios;
     private List<?> listaNovedades;
+    private List<?> listaInventariosBingo;
 
     // Contadores de inventario
     private Integer registrados;

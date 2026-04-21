@@ -20,6 +20,8 @@ public interface ActaNotificacionService {
                             SiiFirmaActaEntity firma,
                             SiiResumenInventarioEntity resumen,
                             List<SiiInventarioRegistradoEntity> inventarios,
-                            List<SiiNovedadRegistradaEntity> novedades);
+                            List<SiiNovedadRegistradaEntity> novedades,
+                            SiiVerificacionBingoEntity verificacionBingo,
+                            List<SiiInventarioBingoRegistradoEntity> inventariosBingo);
 
 }
