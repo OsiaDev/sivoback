@@ -32,4 +32,6 @@ public class ActaReporteProperties {
 
     private String novedad = "actaVisitaComercial_Novedad";
 
+    private String bingo = "actaVisitaComercial_Bingo";
+
 }

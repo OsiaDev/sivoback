@@ -85,6 +85,7 @@ acta:
     no-check: unchecked
     inventario: actaVisitaComercial_Inventario
     novedad: actaVisitaComercial_Novedad
+    bingo: actaVisitaComercial_Bingo
   notificacion:
     asunto: "Coljuegos - Acta de Visita"
     remitente: ${MAIL_SENDER:no-reply@coljuegos.gov.co}
