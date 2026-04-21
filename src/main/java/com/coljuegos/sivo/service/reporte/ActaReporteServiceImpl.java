@@ -228,7 +228,7 @@ public class ActaReporteServiceImpl implements ActaReporteService {
                 ctx.getListaInventarios() != null ? ctx.getListaInventarios() : Collections.emptyList()));
         p.put("listaNovedad", new JRBeanCollectionDataSource(
                 ctx.getListaNovedades() != null ? ctx.getListaNovedades() : Collections.emptyList()));
-        p.put("listaInventariosBingo", new JRBeanCollectionDataSource(
+        p.put("listaBingo", new JRBeanCollectionDataSource(
                 ctx.getListaInventariosBingo() != null ? ctx.getListaInventariosBingo() : Collections.emptyList()));
 
         // ── Contadores de Inventario ────────────────────────────────────────────
