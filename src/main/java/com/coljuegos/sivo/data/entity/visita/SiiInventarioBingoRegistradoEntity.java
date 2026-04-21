@@ -40,7 +40,7 @@ public class SiiInventarioBingoRegistradoEntity implements Serializable {
     @Column(name = "IBR_NUM_ACTA", nullable = false)
     private Integer ibrNumActa;
 
-    @Column(name = "IBR_SERIAL", nullable = false, length = 60)
+    @Column(name = "IBR_SERIAL", length = 60)
     private String ibrSerial;
 
     @Column(name = "IBR_MARCA", length = 100)
