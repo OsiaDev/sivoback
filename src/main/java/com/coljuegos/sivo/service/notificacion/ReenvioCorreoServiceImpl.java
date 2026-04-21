@@ -25,6 +25,8 @@ public class ReenvioCorreoServiceImpl implements ReenvioCorreoService {
     private final ResumenInventarioRepository resumenInventarioRepository;
     private final InventarioRegistradoRepository inventarioRegistradoRepository;
     private final NovedadRegistradaRepository novedadRegistradaRepository;
+    private final VerificacionBingoRepository verificacionBingoRepository;
+    private final InventarioBingoRegistradoRepository inventarioBingoRegistradoRepository;
 
     private final ActaNotificacionService actaNotificacionService;
 
@@ -63,9 +65,14 @@ public class ReenvioCorreoServiceImpl implements ReenvioCorreoService {
                 inventarioRegistradoRepository.findByAutoComisorioCodigo(aucCodigo));
         List<SiiNovedadRegistradaEntity> novedades = new ArrayList<>(
                 novedadRegistradaRepository.findByAutoComisorioCodigo(aucCodigo));
+                
+        SiiVerificacionBingoEntity verificacionBingo = verificacionBingoRepository.findByAutoComisorioCodigo(aucCodigo).orElse(null);
+        List<SiiInventarioBingoRegistradoEntity> inventariosBingo = new ArrayList<>(
+                inventarioBingoRegistradoRepository.findByAutoComisorioCodigo(aucCodigo));
 
         actaNotificacionService.notificarActaAsync(
-                autoComisorio, actaVisita, contractual, siplaft, juegoResp, firma, resumen, inventarios, novedades);
+                autoComisorio, actaVisita, contractual, siplaft, juegoResp, firma, resumen, inventarios, novedades,
+                verificacionBingo, inventariosBingo);
         log.info("[REENVIO] Solicitud de reenvío procesada y delegada asíncronamente para el acta {}", numActa);
     }
 

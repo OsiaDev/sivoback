@@ -45,7 +45,9 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
             SiiFirmaActaEntity firma,
             SiiResumenInventarioEntity resumen,
             List<SiiInventarioRegistradoEntity> inventarios,
-            List<SiiNovedadRegistradaEntity> novedades) {
+            List<SiiNovedadRegistradaEntity> novedades,
+            SiiVerificacionBingoEntity verificacionBingo,
+            List<SiiInventarioBingoRegistradoEntity> inventariosBingo) {
         Integer numActa = autoComisorio.getAucNumero();
         log.info("[NOTIF] Iniciando notificación asíncrona para acta {}", numActa);
 
@@ -60,7 +62,7 @@ public class ActaNotificacionServiceImpl implements ActaNotificacionService {
             // 1. Construir contexto y generar PDF en memoria
             ActaReporteContextDTO context = actaReporteContextMapper.mapear(
                     autoComisorio, actaVisita, contractual, siplaft, juegoResponsableEntity, firma, resumen,
-                    inventarios, novedades);
+                    inventarios, novedades, verificacionBingo, inventariosBingo);
 
             byte[] pdf = actaReporteService.generarReporteActa(context);
 

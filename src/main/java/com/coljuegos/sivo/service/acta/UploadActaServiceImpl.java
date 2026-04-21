@@ -8,6 +8,7 @@ import com.coljuegos.sivo.data.entity.visita.*;
 import com.coljuegos.sivo.data.repository.*;
 import com.coljuegos.sivo.service.firma.FirmaActaStorageService;
 import com.coljuegos.sivo.service.imagen.ImagenStorageService;
+import com.coljuegos.sivo.service.inventario.InventarioBingoRegistradoStorageService;
 import com.coljuegos.sivo.service.inventario.InventarioRegistradoStorageService;
 import com.coljuegos.sivo.service.novedad.NovedadRegistradaStorageService;
 import com.coljuegos.sivo.service.notificacion.ActaNotificacionService;
@@ -45,6 +46,11 @@ public class UploadActaServiceImpl implements UploadActaService {
     private final FirmaActaStorageService firmaActaStorageService;
 
     private final ResumenInventarioRepository resumenInventarioRepository;
+    
+    private final VerificacionBingoRepository verificacionBingoRepository;
+    
+    private final InventarioBingoRegistradoStorageService inventarioBingoRegistradoStorageService;
+
     private final ActaNotificacionService actaNotificacionService;
 
     @Override
@@ -85,7 +91,9 @@ public class UploadActaServiceImpl implements UploadActaService {
             SiiVerificacionJuegoResponsableEntity entidadJuegoResp = null;
             SiiFirmaActaEntity entidadFirma = null;
             SiiResumenInventarioEntity entidadResumen = null;
+            SiiVerificacionBingoEntity entidadBingo = null;
             List<SiiInventarioRegistradoEntity> listaInventarios = Collections.emptyList();
+            List<SiiInventarioBingoRegistradoEntity> listaInventariosBingo = Collections.emptyList();
             List<SiiNovedadRegistradaEntity> listaNovedades = Collections.emptyList();
 
             // Guardar la información de ActaVisitaDTO
@@ -122,6 +130,23 @@ public class UploadActaServiceImpl implements UploadActaService {
                     && !actaCompleteDTO.getInventariosRegistrados().isEmpty()) {
                 listaInventarios = this.guardarInventarios(
                         actaCompleteDTO.getInventariosRegistrados(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar la información de VerificacionBingoDTO
+            if (actaCompleteDTO.getVerificacionBingo() != null) {
+                entidadBingo = this.guardarVerificacionBingo(
+                        actaCompleteDTO.getVerificacionBingo(),
+                        autoComisorio,
+                        actaCompleteDTO.getNumActa());
+            }
+
+            // Guardar inventarios registrados de bingo
+            if (actaCompleteDTO.getInventariosBingoRegistrados() != null
+                    && !actaCompleteDTO.getInventariosBingoRegistrados().isEmpty()) {
+                listaInventariosBingo = this.guardarInventariosBingo(
+                        actaCompleteDTO.getInventariosBingoRegistrados(),
                         autoComisorio,
                         actaCompleteDTO.getNumActa());
             }
@@ -167,7 +192,8 @@ public class UploadActaServiceImpl implements UploadActaService {
             // PASAMOS TODAS LAS ENTIDADES DIRECTAMENTE PARA EVITAR HANGS POR RE-QUERY
             this.lanzarNotificacionAsincronaDirecto(
                     autoComisorio, entidadActa, entidadContractual, entidadSiplaft, 
-                    entidadJuegoResp, entidadFirma, entidadResumen, listaInventarios, listaNovedades);
+                    entidadJuegoResp, entidadFirma, entidadResumen, listaInventarios, listaNovedades,
+                    entidadBingo, listaInventariosBingo);
 
             return ActaSincronizacionResponseDTO.success(
                     actaCompleteDTO.getNumActa(),
@@ -192,7 +218,9 @@ public class UploadActaServiceImpl implements UploadActaService {
             SiiFirmaActaEntity firma,
             SiiResumenInventarioEntity resumen,
             List<SiiInventarioRegistradoEntity> inventarios,
-            List<SiiNovedadRegistradaEntity> novedades) {
+            List<SiiNovedadRegistradaEntity> novedades,
+            SiiVerificacionBingoEntity verificacionBingo,
+            List<SiiInventarioBingoRegistradoEntity> inventariosBingo) {
         
         try {
             log.info("[ASYNC-TRIGGER] Disparando notificación directa para acta {} (Sin consultas extras)", auto.getAucNumero());
@@ -202,7 +230,8 @@ public class UploadActaServiceImpl implements UploadActaService {
             this.inicializarAsociaciones(auto);
 
             actaNotificacionService.notificarActaAsync(
-                    auto, acta, contractual, siplaft, juegoResp, firma, resumen, inventarios, novedades
+                    auto, acta, contractual, siplaft, juegoResp, firma, resumen, inventarios, novedades,
+                    verificacionBingo, inventariosBingo
             );
 
         } catch (Exception e) {
@@ -502,6 +531,63 @@ public class UploadActaServiceImpl implements UploadActaService {
             log.error("Error al guardar inventarios del acta {}: {}. Se continuará con el resto del proceso.",
                     numActa, e.getMessage(), e);
             return Collections.emptyList();
+        }
+    }
+
+    private List<SiiInventarioBingoRegistradoEntity> guardarInventariosBingo(List<InventarioBingoRegistradoDTO> inventarios,
+                                     SiiAutoComisorioEntity autoComisorio,
+                                     Integer numActa) {
+        try {
+            if (inventarios == null || inventarios.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            return this.inventarioBingoRegistradoStorageService.guardarInventarios(
+                    inventarios,
+                    autoComisorio,
+                    numActa);
+
+        } catch (Exception e) {
+            log.error("Error al guardar inventarios de bingo del acta {}: {}. Se continuará con el resto del proceso.",
+                    numActa, e.getMessage(), e);
+            return Collections.emptyList();
+        }
+    }
+
+    private SiiVerificacionBingoEntity guardarVerificacionBingo(VerificacionBingoDTO verificacionDTO,
+                                                    SiiAutoComisorioEntity autoComisorio,
+                                                    Integer numActa) {
+        try {
+            log.info("Guardando información de VerificacionBingo para acta número: {}", numActa);
+
+            Optional<SiiVerificacionBingoEntity> verificacionExistente =
+                    this.verificacionBingoRepository.findByAutoComisorioCodigo(autoComisorio.getAucCodigo());
+
+            SiiVerificacionBingoEntity verificacionEntity;
+
+            if (verificacionExistente.isPresent()) {
+                log.info("Actualizando registro existente de VerificacionBingo para acta: {}", numActa);
+                verificacionEntity = verificacionExistente.get();
+            } else {
+                log.info("Creando nuevo registro de VerificacionBingo para acta: {}", numActa);
+                verificacionEntity = new SiiVerificacionBingoEntity();
+                verificacionEntity.setSiiAutoComisorio(autoComisorio);
+                verificacionEntity.setVbiNumActa(numActa);
+                verificacionEntity.setVbiFechaRegistro(LocalDateTime.now());
+            }
+
+            verificacionEntity.setVbiCartonesModulos(verificacionDTO.getCartonesModulos());
+            verificacionEntity.setVbiSistemaTecnologico(verificacionDTO.getSistemaTecnologico());
+            verificacionEntity.setVbiSistemaInterconectado(verificacionDTO.getSistemaInterconectado());
+            verificacionEntity.setVbiEventosEspeciales(verificacionDTO.getRealizaEventosEspeciales());
+            verificacionEntity.setVbiTipoBalotera(verificacionDTO.getTipoBalotera());
+            verificacionEntity.setVbiValorCarton(verificacionDTO.getValorCartonExpuesto());
+
+            return this.verificacionBingoRepository.save(verificacionEntity);
+
+        } catch (Exception e) {
+            log.error("Error al guardar VerificacionBingo para acta {}: {}", numActa, e.getMessage(), e);
+            throw new RuntimeException("Error al guardar verificación BINGO: " + e.getMessage(), e);
         }
     }
 

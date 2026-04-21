@@ -5,10 +5,63 @@ import com.coljuegos.sivo.data.entity.SiiAutoComisorioEntity;
 import com.coljuegos.sivo.data.entity.visita.*;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
+import com.coljuegos.sivo.data.repository.InventarioRepository;
+import com.coljuegos.sivo.data.dto.InventarioProjection;
+import java.util.Collections;
+
 @Component
+@RequiredArgsConstructor
 public class ActaReporteContextMapper {
+
+    private final InventarioRepository inventarioRepository;
+
+    private enum ApuestaCodigoEnum {
+        MET(new String[]{"1", "2", "3"}),
+        MESAS(new String[]{"4"}),
+        BINGO(new String[]{"6", "7", "8", "9", "10", "11", "12", "13"}),
+        OTROS(new String[]{"5", "14"});
+
+        private final String[] codigos;
+
+        ApuestaCodigoEnum(String[] codigos) {
+            this.codigos = codigos;
+        }
+
+        public static ApuestaCodigoEnum fromCodigo(String codigo) {
+            if (codigo == null) return MET;
+            for (ApuestaCodigoEnum e : values()) {
+                for (String c : e.codigos) {
+                    if (c.equals(codigo)) return e;
+                }
+            }
+            return MET;
+        }
+    }
+
+    private static class Counters {
+        int registrados = 0;
+        int apagados = 0;
+        int noEncontrados = 0;
+        int sinPlaca = 0;
+        int serialDiferente = 0;
+        int codigoApuestaDiferente = 0;
+        int novedadesApagadas = 0;
+        int novedadesOperando = 0;
+    }
+
+    private Counters getCounter(ApuestaCodigoEnum tipo, Counters met, Counters mesas, Counters bingo, Counters otros) {
+        switch (tipo) {
+            case MESAS: return mesas;
+            case BINGO: return bingo;
+            case OTROS: return otros;
+            case MET:
+            default: return met;
+        }
+    }
 
     public ActaReporteContextDTO mapear(
             SiiAutoComisorioEntity auto,
@@ -19,37 +72,75 @@ public class ActaReporteContextMapper {
             SiiFirmaActaEntity firma,
             SiiResumenInventarioEntity resumen,
             List<SiiInventarioRegistradoEntity> inventarios,
-            List<SiiNovedadRegistradaEntity> novedades) {
+            List<SiiNovedadRegistradaEntity> novedades,
+            SiiVerificacionBingoEntity verificacionBingo,
+            List<SiiInventarioBingoRegistradoEntity> inventariosBingo) {
 
-        long apagados = inventarios == null ? 0 : inventarios.stream()
-                .filter(inv -> "APAGADO".equalsIgnoreCase(inv.getInrEstado()))
-                .count();
+        Counters met = new Counters();
+        Counters mesas = new Counters();
+        Counters otros = new Counters();
+        Counters bingo = new Counters();
 
-        long noEncontrados = inventarios == null ? 0 : inventarios.stream()
-                .filter(inv -> "NO_ENCONTRADO".equalsIgnoreCase(inv.getInrEstado()))
-                .count();
-                
-        long serialDiferente = inventarios == null ? 0 : inventarios.stream()
-                .filter(inv -> inv.getInrSerialDiferente() != null && !inv.getInrSerialDiferente().trim().isEmpty())
-                .count();
+        if (inventarios != null) {
+            for (SiiInventarioRegistradoEntity inv : inventarios) {
+                String codigo = (inv.getInrCodApuestaDiferenteValor() != null && !inv.getInrCodApuestaDiferenteValor().trim().isEmpty())
+                        ? inv.getInrCodApuestaDiferenteValor() : inv.getInrCodigoApuesta();
+                ApuestaCodigoEnum tipo = ApuestaCodigoEnum.fromCodigo(codigo);
+                Counters c = getCounter(tipo, met, mesas, bingo, otros);
 
-        long sinPlaca = novedades == null ? 0 : novedades.stream()
-                .filter(nov -> Integer.valueOf(0).equals(nov.getNorTienePlaca()))
-                .count();
-                
-        long codigoApuestaDiferente = inventarios == null ? 0 : inventarios.stream()
-                .filter(inv -> Integer.valueOf(1).equals(inv.getInrCodApuestaDiferente()))
-                .count();
+                c.registrados++;
+                if ("APAGADO".equalsIgnoreCase(inv.getInrEstado())) c.apagados++;
+                if ("NO_ENCONTRADO".equalsIgnoreCase(inv.getInrEstado())) c.noEncontrados++;
+                if (inv.getInrSerialDiferente() != null && !inv.getInrSerialDiferente().trim().isEmpty()) c.serialDiferente++;
+                if (Integer.valueOf(1).equals(inv.getInrCodApuestaDiferente())) c.codigoApuestaDiferente++;
+            }
+        }
 
-        long novedadesApagadas = novedades == null ? 0 : novedades.stream()
-                .filter(nov -> "Apagado".equalsIgnoreCase(nov.getNorOperando()))
-                .count();
+        if (novedades != null) {
+            for (SiiNovedadRegistradaEntity nov : novedades) {
+                String codigo = nov.getNorCodigoApuesta();
+                ApuestaCodigoEnum tipo = ApuestaCodigoEnum.fromCodigo(codigo);
+                Counters c = getCounter(tipo, met, mesas, bingo, otros);
 
-        long novedadesOperando = novedades == null ? 0 : novedades.stream()
-                .filter(nov -> "Operando".equalsIgnoreCase(nov.getNorOperando()))
-                .count();
+                if (Integer.valueOf(0).equals(nov.getNorTienePlaca())) c.sinPlaca++;
+                if ("Apagado".equalsIgnoreCase(nov.getNorOperando())) c.novedadesApagadas++;
+                if ("Operando".equalsIgnoreCase(nov.getNorOperando())) c.novedadesOperando++;
+            }
+        }
 
-        Integer registrados = inventarios == null ? 0 : inventarios.size();
+        if (inventariosBingo != null) {
+            for (SiiInventarioBingoRegistradoEntity invB : inventariosBingo) {
+                bingo.registrados++;
+                if ("APAGADO".equalsIgnoreCase(invB.getIbrEstado())) bingo.apagados++;
+                if ("NO_ENCONTRADO".equalsIgnoreCase(invB.getIbrEstado())) bingo.noEncontrados++;
+                if (Integer.valueOf(1).equals(invB.getIbrCodApuestaDiferente())) bingo.codigoApuestaDiferente++;
+            }
+        }
+
+        // 3. Sumar Novedades Operando a Registrados de su grupo respectivo.
+        met.registrados += met.novedadesOperando;
+        mesas.registrados += mesas.novedadesOperando;
+        bingo.registrados += bingo.novedadesOperando;
+        otros.registrados += otros.novedadesOperando;
+
+        // 4. Calculo Global Excedente
+        int totalInventarioOriginal = 0;
+        Long conCodigo = auto.getSiiContrato() != null ? auto.getSiiContrato().getConCodigo() : null;
+        Integer aucNumero = auto.getAucNumero();
+        Long estCodigo = auto.getSiiEstablecimiento() != null ? auto.getSiiEstablecimiento().getEstCodigo() : null;
+
+        if (conCodigo != null && estCodigo != null && aucNumero != null) {
+            Collection<InventarioProjection> inventariosRaw = inventarioRepository.buscarInventariosPorFiltros(
+                    Collections.singletonList(conCodigo),
+                    Collections.singletonList(aucNumero),
+                    Collections.singletonList(estCodigo)
+            );
+            totalInventarioOriginal = inventariosRaw.size();
+        }
+
+        int sumaNovedadesYRegistrados = met.registrados + mesas.registrados + bingo.registrados + otros.registrados;
+        int excedente = sumaNovedadesYRegistrados - totalInventarioOriginal;
+        long novedadesOperandoFinal = excedente > 0 ? excedente : 0;
 
         return ActaReporteContextDTO.builder()
                 .numActa(auto.getAucNumero())
@@ -135,16 +226,58 @@ public class ActaReporteContextMapper {
                 .rolFirmaOperador(firma != null ? firma.getFiaCargoOperador() : null)
                 .firmaOperadorPath(firma != null ? firma.getFiaPathFirmaOperador() : null)
 
+                // Bingo
+                .bingoCartonesModulos(verificacionBingo != null ? verificacionBingo.getVbiCartonesModulos() : null)
+                .bingoSistemaTecnologico(verificacionBingo != null ? verificacionBingo.getVbiSistemaTecnologico() : null)
+                .bingoSistemaInterconectado(verificacionBingo != null ? verificacionBingo.getVbiSistemaInterconectado() : null)
+                .bingoEventosEspeciales(verificacionBingo != null ? verificacionBingo.getVbiEventosEspeciales() : null)
+                .bingoTipoBalotera(verificacionBingo != null ? verificacionBingo.getVbiTipoBalotera() : null)
+                .bingoValorCarton(verificacionBingo != null ? verificacionBingo.getVbiValorCarton() : null)
+
                 .listaInventarios(inventarios)
                 .listaNovedades(novedades)
-                .registrados(registrados)
-                .numeroInventariosApagados((int) apagados)
-                .numeroInventariosNoEncontrados((int) noEncontrados)
-                .numeroNovedadesSinPlaca((int) sinPlaca)
-                .numeroMaquinasSerialDiferente((int) serialDiferente)
-                .numeroCodigoApuestaDiferente((int) codigoApuestaDiferente)
-                .numeroNovedadesApagadas((int) novedadesApagadas)
-                .numeroNovedadesOperando((int) novedadesOperando)
+                .listaInventariosBingo(inventariosBingo)
+                
+                // Contadores MET
+                .registrados(met.registrados)
+                .numeroInventariosApagados(met.apagados)
+                .numeroInventariosNoEncontrados(met.noEncontrados)
+                .numeroNovedadesSinPlaca(met.sinPlaca)
+                .numeroMaquinasSerialDiferente(met.serialDiferente)
+                .numeroCodigoApuestaDiferente(met.codigoApuestaDiferente)
+                .numeroNovedadesApagadas(met.novedadesApagadas)
+                .numeroNovedadesOperando((int) novedadesOperandoFinal)
+                
+                // Contadores Mesas
+                .registradosMesas(mesas.registrados)
+                .numeroInventariosApagadosMesas(mesas.apagados)
+                .numeroInventariosNoEncontradosMesas(mesas.noEncontrados)
+                .numeroNovedadesSinPlacaMesas(mesas.sinPlaca)
+                .numeroMaquinasSerialDiferenteMesas(mesas.serialDiferente)
+                .numeroCodigoApuestaDiferenteMesas(mesas.codigoApuestaDiferente)
+                .numeroNovedadesApagadasMesas(mesas.novedadesApagadas)
+                .numeroNovedadesOperandoMesas(mesas.novedadesOperando)
+                
+                // Contadores Bingos
+                .registradosBingos(bingo.registrados)
+                .numeroInventariosApagadosBingos(bingo.apagados)
+                .numeroInventariosNoEncontradosBingos(bingo.noEncontrados)
+                .numeroNovedadesSinPlacaBingos(bingo.sinPlaca)
+                .numeroMaquinasSerialDiferenteBingos(bingo.serialDiferente)
+                .numeroCodigoApuestaDiferenteBingos(bingo.codigoApuestaDiferente)
+                .numeroNovedadesApagadasBingos(bingo.novedadesApagadas)
+                .numeroNovedadesOperandoBingos(bingo.novedadesOperando)
+                
+                // Contadores Otros
+                .registradosOtros(otros.registrados)
+                .numeroInventariosApagadosOtros(otros.apagados)
+                .numeroInventariosNoEncontradosOtros(otros.noEncontrados)
+                .numeroNovedadesSinPlacaOtros(otros.sinPlaca)
+                .numeroMaquinasSerialDiferenteOtros(otros.serialDiferente)
+                .numeroCodigoApuestaDiferenteOtros(otros.codigoApuestaDiferente)
+                .numeroNovedadesApagadasOtros(otros.novedadesApagadas)
+                .numeroNovedadesOperandoOtros(otros.novedadesOperando)
+                
                 .build();
     }
 }
