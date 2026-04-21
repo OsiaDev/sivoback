@@ -110,4 +110,34 @@ public class ActaReporteContextDTO {
     private Integer numeroNovedadesApagadas;
     private Integer numeroNovedadesOperando;
 
+    // Contadores de inventario Bingos
+    private Integer registradosBingos;
+    private Integer numeroInventariosApagadosBingos;
+    private Integer numeroInventariosNoEncontradosBingos;
+    private Integer numeroNovedadesSinPlacaBingos;
+    private Integer numeroMaquinasSerialDiferenteBingos;
+    private Integer numeroCodigoApuestaDiferenteBingos;
+    private Integer numeroNovedadesApagadasBingos;
+    private Integer numeroNovedadesOperandoBingos;
+
+    // Contadores de inventario Mesas
+    private Integer registradosMesas;
+    private Integer numeroInventariosApagadosMesas;
+    private Integer numeroInventariosNoEncontradosMesas;
+    private Integer numeroNovedadesSinPlacaMesas;
+    private Integer numeroMaquinasSerialDiferenteMesas;
+    private Integer numeroCodigoApuestaDiferenteMesas;
+    private Integer numeroNovedadesApagadasMesas;
+    private Integer numeroNovedadesOperandoMesas;
+
+    // Contadores de inventario Otros
+    private Integer registradosOtros;
+    private Integer numeroInventariosApagadosOtros;
+    private Integer numeroInventariosNoEncontradosOtros;
+    private Integer numeroNovedadesSinPlacaOtros;
+    private Integer numeroMaquinasSerialDiferenteOtros;
+    private Integer numeroCodigoApuestaDiferenteOtros;
+    private Integer numeroNovedadesApagadasOtros;
+    private Integer numeroNovedadesOperandoOtros;
+
 }

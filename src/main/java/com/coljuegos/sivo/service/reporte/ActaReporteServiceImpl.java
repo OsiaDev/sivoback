@@ -240,11 +240,54 @@ public class ActaReporteServiceImpl implements ActaReporteService {
         p.put("numeroCodigoApuestaDiferente", ctx.getNumeroCodigoApuestaDiferente());
         p.put("numeroNovedadesApagadas", ctx.getNumeroNovedadesApagadas());
         p.put("numeroNovedadesOperando", ctx.getNumeroNovedadesOperando());
-        Integer totalInventarioEncontrado =
-                nvl(ctx.getRegistrados())
-                        - nvl(ctx.getNumeroInventariosNoEncontrados())
-                        + nvl(ctx.getNumeroNovedadesSinPlaca()) + nvl(ctx.getNumeroNovedadesOperando());
-        p.put("totalInventarioEncontrado", totalInventarioEncontrado);
+
+        // ── Contadores de Inventario BINGOS ──────────────────────────────────────
+        p.put("numeroInventariosRegistradosBingos", ctx.getRegistradosBingos());
+        p.put("numeroInventariosApagadosBingos", ctx.getNumeroInventariosApagadosBingos());
+        p.put("numeroInventariosNoEncontradosBingos", ctx.getNumeroInventariosNoEncontradosBingos());
+        p.put("numeroNovedadesSinPlacaBingos", ctx.getNumeroNovedadesSinPlacaBingos());
+        p.put("numeroMaquinasSerialDiferenteBingos", ctx.getNumeroMaquinasSerialDiferenteBingos());
+        p.put("numeroCodigoApuestaDiferenteBingos", ctx.getNumeroCodigoApuestaDiferenteBingos());
+        p.put("numeroNovedadesApagadasBingos", ctx.getNumeroNovedadesApagadasBingos());
+        p.put("numeroNovedadesOperandoBingos", ctx.getNumeroNovedadesOperandoBingos());
+
+        // ── Contadores de Inventario MESAS ───────────────────────────────────────
+        p.put("numeroInventariosRegistradosMesas", ctx.getRegistradosMesas());
+        p.put("numeroInventariosApagadosMesas", ctx.getNumeroInventariosApagadosMesas());
+        p.put("numeroInventariosNoEncontradosMesas", ctx.getNumeroInventariosNoEncontradosMesas());
+        p.put("numeroNovedadesSinPlacaMesas", ctx.getNumeroNovedadesSinPlacaMesas());
+        p.put("numeroMaquinasSerialDiferenteMesas", ctx.getNumeroMaquinasSerialDiferenteMesas());
+        p.put("numeroCodigoApuestaDiferenteMesas", ctx.getNumeroCodigoApuestaDiferenteMesas());
+        p.put("numeroNovedadesApagadasMesas", ctx.getNumeroNovedadesApagadasMesas());
+        p.put("numeroNovedadesOperandoMesas", ctx.getNumeroNovedadesOperandoMesas());
+
+        // ── Contadores de Inventario OTROS ───────────────────────────────────────
+        p.put("numeroInventariosRegistradosOtros", ctx.getRegistradosOtros());
+        p.put("numeroInventariosApagadosOtros", ctx.getNumeroInventariosApagadosOtros());
+        p.put("numeroInventariosNoEncontradosOtros", ctx.getNumeroInventariosNoEncontradosOtros());
+        p.put("numeroNovedadesSinPlacaOtros", ctx.getNumeroNovedadesSinPlacaOtros());
+        p.put("numeroMaquinasSerialDiferenteOtros", ctx.getNumeroMaquinasSerialDiferenteOtros());
+        p.put("numeroCodigoApuestaDiferenteOtros", ctx.getNumeroCodigoApuestaDiferenteOtros());
+        p.put("numeroNovedadesApagadasOtros", ctx.getNumeroNovedadesApagadasOtros());
+        p.put("numeroNovedadesOperandoOtros", ctx.getNumeroNovedadesOperandoOtros());
+
+        // ── Totales Encontrados por Tipo ────────────────────────────────────────
+        // Fórmula: (Registrados_del_Sistema - No_Encontrados) + Sin_Placa + Operando
+        // Como 'registrados' en el DTO ya incluye 'novedadesOperando' por tipo, la fórmula simplificada es:
+        // Registrados_DTO - No_Encontrados + Sin_Placa
+
+        Integer totalMET = nvl(ctx.getRegistrados()) - nvl(ctx.getNumeroInventariosNoEncontrados()) + nvl(ctx.getNumeroNovedadesSinPlaca());
+        Integer totalBingos = nvl(ctx.getRegistradosBingos()) - nvl(ctx.getNumeroInventariosNoEncontradosBingos()) + nvl(ctx.getNumeroNovedadesSinPlacaBingos());
+        Integer totalMesas = nvl(ctx.getRegistradosMesas()) - nvl(ctx.getNumeroInventariosNoEncontradosMesas()) + nvl(ctx.getNumeroNovedadesSinPlacaMesas());
+        Integer totalOtros = nvl(ctx.getRegistradosOtros()) - nvl(ctx.getNumeroInventariosNoEncontradosOtros()) + nvl(ctx.getNumeroNovedadesSinPlacaOtros());
+
+        p.put("totalInventarioEncontrado", totalMET); // Original / MET
+        p.put("totalInventarioEncontradoBingos", totalBingos);
+        p.put("totalInventarioEncontradoMesas", totalMesas);
+        p.put("totalInventarioEncontradoOtros", totalOtros);
+
+        // El total global consolidado si se llegara a necesitar (puedes usar una suma de los anteriores)
+        p.put("totalInventarioEncontradoGlobal", totalMET + totalBingos + totalMesas + totalOtros);
 
         return p;
     }
