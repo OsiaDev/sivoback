@@ -18,4 +18,19 @@ public class FirmaActaDTO {
     private String ccOperador;
     private String cargoOperador;
     private String firmaOperador; // Base64
+
+    @Override
+    public String toString() {
+        return "FirmaActaDTO{" +
+                "nombreFiscalizadorPrincipal='" + nombreFiscalizadorPrincipal + '\'' +
+                ", ccFiscalizadorPrincipal='" + ccFiscalizadorPrincipal + '\'' +
+                ", cargoFiscalizadorPrincipal='" + cargoFiscalizadorPrincipal + '\'' +
+                ", nombreFiscalizadorSecundario='" + nombreFiscalizadorSecundario + '\'' +
+                ", ccFiscalizadorSecundario='" + ccFiscalizadorSecundario + '\'' +
+                ", cargoFiscalizadorSecundario='" + cargoFiscalizadorSecundario + '\'' +
+                ", nombreOperador='" + nombreOperador + '\'' +
+                ", ccOperador='" + ccOperador + '\'' +
+                ", cargoOperador='" + cargoOperador + '\'' +
+                '}';
+    }
 }
